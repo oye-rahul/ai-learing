@@ -1,5 +1,7 @@
 # FlowState - AI-Powered Developer Learning Platform
 
+🚀 **Live Demo**: [Deploy on Vercel](https://vercel.com) | **GitHub**: https://github.com/oye-rahul/ai-learing
+
 FlowState is a comprehensive learning platform that combines AI assistance with interactive coding to help developers learn faster and build better projects. The platform features personalized learning paths, real-time AI code assistance, project collaboration, and detailed analytics.
 
 ## 🚀 Features
@@ -18,6 +20,7 @@ FlowState is a comprehensive learning platform that combines AI assistance with 
 - Bug detection and debugging assistance
 - Code conversion between programming languages
 - Code generation from natural language descriptions
+- **Agentic AI Code Fixing**: Automatically applies fixed code to editor
 
 ### Learning Features
 - Personalized learning recommendations
@@ -39,101 +42,74 @@ FlowState is a comprehensive learning platform that combines AI assistance with 
 ### Backend
 - **Node.js** with Express.js
 - **SQLite** (development) / **Supabase** (production) - Auto-switching database
-- **JWT** authentication
+- **JWT** authentication with **Passport.js**
 - **Google Gemini AI** integration (gemini-2.5-flash)
 - **bcrypt** for password hashing
-- **Piston API** for online code execution
+- **Piston API** for online code execution (13+ languages)
 
-### DevOps
-- **Docker** containerization
-- **Nginx** reverse proxy
-- **Redis** for caching (optional)
+### DevOps & Deployment
+- **Vercel** for frontend hosting
+- **Railway/Render** for backend hosting
+- **Docker** containerization (optional)
+- **Nginx** reverse proxy (optional)
 
 ## 📋 Prerequisites
 
 - Node.js 18+ and npm
-- PostgreSQL 12+
-- OpenAI API key (for AI features)
-- Docker and Docker Compose (optional)
+- Gemini API key (free tier available)
+- Git for version control
 
 ## 🚀 Quick Start
 
-### Option 1: Docker Setup (Recommended)
+### Option 1: Local Development
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd flowstate
+   git clone https://github.com/oye-rahul/ai-learing.git
+   cd ai-learing
    ```
 
-2. **Set up environment variables**
+2. **Setup Backend**
    ```bash
-   # Copy example environment files
-   cp backend/.env.example backend/.env
-   cp frontend/.env.example frontend/.env
-   
-   # Edit backend/.env with your settings
-   nano backend/.env
-   ```
-
-3. **Configure your OpenAI API key**
-   ```bash
-   # In backend/.env, set:
-   OPENAI_API_KEY=your-openai-api-key-here
-   ```
-
-4. **Start with Docker Compose**
-   ```bash
-   docker-compose up -d
-   ```
-
-5. **Run database migrations**
-   ```bash
-   docker-compose exec backend npm run migrate
-   ```
-
-6. **Access the application**
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:5000
-   - Database: localhost:5432
-
-### Option 2: Manual Setup
-
-1. **Clone and setup backend**
-   ```bash
-   git clone <repository-url>
-   cd flowstate/backend
+   cd backend
    npm install
    cp .env.example .env
-   # Edit .env with your database and API settings
-   ```
-
-2. **Setup PostgreSQL database**
-   ```bash
-   # Create database
-   createdb flowstate
-   
-   # Run migrations
-   npm run migrate
-   ```
-
-3. **Start backend server**
-   ```bash
-   npm run dev
-   ```
-
-4. **Setup frontend** (in new terminal)
-   ```bash
-   cd ../frontend
-   npm install
-   cp .env.example .env
-   # Edit .env if needed
-   ```
-
-5. **Start frontend development server**
-   ```bash
+   # Edit .env with your Gemini API key
    npm start
    ```
+
+3. **Setup Frontend** (in new terminal)
+   ```bash
+   cd frontend
+   npm install
+   npm start
+   ```
+
+4. **Access the application**
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:5000
+
+### Option 2: Deploy to Vercel (Production)
+
+**Quick Deploy (5 minutes):**
+
+1. **Deploy Backend to Railway**
+   - Go to [railway.app](https://railway.app)
+   - New Project → Deploy from GitHub
+   - Select: `oye-rahul/ai-learing`
+   - Root Directory: `backend`
+   - Add environment variables (see below)
+
+2. **Deploy Frontend to Vercel**
+   - Go to [vercel.com](https://vercel.com)
+   - New Project → Import from GitHub
+   - Select: `oye-rahul/ai-learing`
+   - Root Directory: `frontend`
+   - Add environment variables (see below)
+
+3. **Done!** Your app is live 🎉
+
+📖 **Detailed Guide**: See [VERCEL_DEPLOYMENT_GUIDE.md](VERCEL_DEPLOYMENT_GUIDE.md)
 
 ## 🔧 Configuration
 
@@ -141,29 +117,27 @@ FlowState is a comprehensive learning platform that combines AI assistance with 
 
 #### Backend (.env)
 ```env
-NODE_ENV=development
+NODE_ENV=production
 PORT=5000
-DATABASE_URL=postgresql://username:password@localhost:5432/flowstate
 JWT_SECRET=your-super-secret-jwt-key
-OPENAI_API_KEY=your-openai-api-key
-FRONTEND_URL=http://localhost:3000
+GEMINI_API_KEY=AIzaSyDQLirYTllwUuTc2CpddevvPhkuWpDDi3I
+FRONTEND_URL=https://your-app.vercel.app
+
+# Optional: Supabase for production database
+SUPABASE_URL=your-supabase-url
+SUPABASE_ANON_KEY=your-supabase-key
+
+# Optional: Google OAuth
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
 ```
 
 #### Frontend (.env)
 ```env
-REACT_APP_API_URL=http://localhost:5000/api
-REACT_APP_WS_URL=ws://localhost:5000
+REACT_APP_API_URL=https://your-backend.railway.app/api
+REACT_APP_ENV=production
+REACT_APP_ENABLE_AI_FEATURES=true
 ```
-
-### Database Schema
-
-The application uses PostgreSQL with the following main tables:
-- `users` - User accounts and profiles
-- `user_progress` - Learning progress and skills
-- `learning_modules` - Course content and structure
-- `projects` - User projects and code
-- `ai_interactions` - AI assistance history
-- `user_activity` - Activity tracking and analytics
 
 ## 📚 API Documentation
 
@@ -171,20 +145,24 @@ The application uses PostgreSQL with the following main tables:
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
 - `POST /api/auth/logout` - User logout
-- `POST /api/auth/refresh` - Refresh JWT token
+- `GET /api/auth/google` - Google OAuth login
+- `GET /api/auth/google/callback` - Google OAuth callback
 
 ### AI Endpoints
 - `POST /api/ai/explain` - Explain code
 - `POST /api/ai/optimize` - Optimize code
-- `POST /api/ai/debug` - Debug code
+- `POST /api/ai/debug` - Debug code (with agentic fixing)
 - `POST /api/ai/convert` - Convert code between languages
 - `POST /api/ai/generate` - Generate code from description
+- `POST /api/ai/chat` - Chat with AI assistant
+- `POST /api/ai/learn-chat` - Learning-focused AI chat
 
 ### Learning Endpoints
 - `GET /api/learning/modules` - Get learning modules
 - `POST /api/learning/start-module` - Start a learning module
 - `POST /api/learning/complete-lesson` - Complete a lesson
 - `GET /api/learning/recommendations` - Get personalized recommendations
+- `GET /api/learning/path` - Get user's learning path
 
 ### Projects Endpoints
 - `GET /api/projects` - Get user projects
@@ -192,24 +170,37 @@ The application uses PostgreSQL with the following main tables:
 - `PUT /api/projects/:id` - Update project
 - `DELETE /api/projects/:id` - Delete project
 
-## 🎨 UI Components
+### Playground Endpoints
+- `POST /api/playground/execute` - Execute code (13+ languages)
+- `GET /api/playground/languages` - Get supported languages
 
-The application includes a comprehensive component library:
+## 🎨 Key Features
 
-### Shared Components
-- `Button` - Customizable button with variants
-- `Input` - Form input with validation
-- `Card` - Container component with hover effects
-- `Modal` - Overlay modal dialogs
-- `LoadingSpinner` - Loading indicators
-- `ProgressBar` - Progress visualization
-- `Tooltip` - Contextual help tooltips
+### 1. Agentic AI Code Fixing
+- Click "Fix Code" button in any editor
+- AI analyzes and fixes bugs automatically
+- Fixed code is applied to editor with highlight animation
+- Works in Code Editor, Playground, and Python Environment
 
-### Feature Components
-- `CodeEditor` - Monaco-powered code editor
-- `AIChatWindow` - AI assistance chat interface
-- `SkillRadarChart` - Skill progression visualization
-- `ActivityCalendar` - GitHub-style activity calendar
+### 2. Multi-Language Code Execution
+Supports 13+ languages:
+- Python, JavaScript, TypeScript, Java, C++, C, C#
+- Go, Rust, PHP, Ruby, Swift, Kotlin
+
+### 3. Google OAuth Integration
+- One-click login with Google
+- Auto-creates user account on first login
+- Secure JWT token generation
+
+### 4. Flexible Database Support
+- **Development**: SQLite (no setup needed)
+- **Production**: Supabase (PostgreSQL)
+- Automatic switching based on environment
+
+### 5. Real-time AI Chat
+- Context-aware conversations
+- Code-specific assistance
+- Learning path recommendations
 
 ## 🧪 Testing
 
@@ -219,50 +210,36 @@ cd frontend
 npm test
 ```
 
-### Backend Testing
+### Build Testing (CI simulation)
 ```bash
-cd backend
-npm test
-```
-
-### E2E Testing
-```bash
-# Install Cypress
-npm install -g cypress
-
-# Run E2E tests
-cypress open
+cd frontend
+CI=true npm run build
 ```
 
 ## 🚀 Deployment
 
-### Production Build
+### Vercel Deployment
+```bash
+# Run automated deployment script
+deploy-to-vercel.bat
 
-1. **Build frontend**
-   ```bash
-   cd frontend
-   npm run build
-   ```
+# Or manually:
+git add .
+git commit -m "Deploy to Vercel"
+git push origin main
+```
 
-2. **Prepare backend**
-   ```bash
-   cd backend
-   npm install --production
-   ```
+### Netlify Deployment
+```bash
+# Update backend URL in netlify.toml
+# Then push to GitHub
+git push origin main
+```
 
-3. **Deploy with Docker**
-   ```bash
-   docker-compose -f docker-compose.prod.yml up -d
-   ```
-
-### Environment Setup
-
-For production deployment:
-- Set `NODE_ENV=production`
-- Use strong JWT secrets
-- Configure proper database credentials
-- Set up SSL certificates
-- Configure domain names
+📖 **Deployment Guides**:
+- [VERCEL_DEPLOYMENT_GUIDE.md](VERCEL_DEPLOYMENT_GUIDE.md) - Complete Vercel guide
+- [NETLIFY_LOGIN_FIX.md](NETLIFY_LOGIN_FIX.md) - Fix Netlify login issues
+- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - General deployment guide
 
 ## 🤝 Contributing
 
@@ -281,30 +258,32 @@ For production deployment:
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
 ## 🆘 Support
 
-- **Documentation**: Check the `/docs` folder for detailed guides
-- **Issues**: Report bugs and request features via GitHub Issues
-- **Discussions**: Join community discussions in GitHub Discussions
-- **Email**: Contact support at support@flowstate.dev
+- **GitHub Issues**: Report bugs and request features
+- **Documentation**: Check deployment guides in repo
+- **Email**: Contact at support@flowstate.dev
 
 ## 🙏 Acknowledgments
 
-- OpenAI for providing the GPT API
-- Monaco Editor team for the excellent code editor
-- Chart.js for data visualization components
-- Tailwind CSS for the utility-first CSS framework
-- The React and Node.js communities
+- Google Gemini AI for AI capabilities
+- Piston API for code execution
+- Monaco Editor for code editing
+- Tailwind CSS for styling
+- React and Node.js communities
 
 ## 🗺 Roadmap
 
-### Phase 1 (Current)
+### Phase 1 (Current) ✅
 - ✅ Core learning platform
-- ✅ AI-powered code assistance
+- ✅ AI-powered code assistance with agentic fixing
 - ✅ Project management
 - ✅ Analytics dashboard
+- ✅ Multi-language code execution
+- ✅ Google OAuth integration
+- ✅ Vercel/Netlify deployment ready
 
 ### Phase 2 (Planned)
 - [ ] Mobile app (React Native)
@@ -312,6 +291,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] Real-time collaboration
 - [ ] Advanced AI features
 - [ ] Community features
+- [ ] More OAuth providers
 
 ### Phase 3 (Future)
 - [ ] Marketplace for learning content
@@ -321,4 +301,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Built with ❤️ by the FlowState team**
+**Built with ❤️ for developers worldwide**
+
+🌟 **Star this repo** if you find it helpful!
+
+📧 **Contact**: https://github.com/oye-rahul
