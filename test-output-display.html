@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Output Display</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1e293b;
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .output-panel {
+            background: #0f172a;
+            color: #f1f5f9;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            min-height: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            margin: 20px 0;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .warning { color: #fbbf24; }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .code-input {
+            width: 100%;
+            min-height: 150px;
+            background: #1e293b;
+            color: #f1f5f9;
+            border: 1px solid #475569;
+            border-radius: 6px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Output Display Test</h1>
+        <p>This is a standalone test to verify output display is working.</p>
+        
+        <h3>Enter JavaScript Code:</h3>
+        <textarea class="code-input" id="codeInput">console.log("Hello from FlowState!");
+console.log("Testing output: 1, 2, 3");
+console.log("Math: 2 + 2 =", 2 + 2);
+console.log("✅ Success!");
+console.log("❌ Error example");
+console.log("⚠️ Warning example");</textarea>
+        
+        <div>
+            <button onclick="runCode()">▶️ Run Code</button>
+            <button onclick="clearOutput()">🗑️ Clear Output</button>
+            <button onclick="testSuccess()">✅ Test Success</button>
+            <button onclick="testError()">❌ Test Error</button>
+        </div>
+        
+        <h3>Output:</h3>
+        <div class="output-panel" id="output">
+            <div style="color: #94a3b8; text-align: center; padding: 40px;">
+                <p>Run your code to see output here...</p>
+                <p style="font-size: 12px; margin-top: 10px;">Click the "Run Code" button above</p>
+            </div>
+        </div>
+        
+        <h3>Console Logs:</h3>
+        <div class="output-panel" id="console" style="max-height: 200px; font-size: 12px; color: #94a3b8;">
+            Console logs will appear here...
+        </div>
+    </div>
+
+    <script>
+        const outputDiv = document.getElementById('output');
+        const consoleDiv = document.getElementById('console');
+        const codeInput = document.getElementById('codeInput');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#f87171' : type === 'success' ? '#4ade80' : '#94a3b8';
+            consoleDiv.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+        
+        function clearOutput() {
+            outputDiv.innerHTML = '<div style="color: #94a3b8; text-align: center; padding: 40px;"><p>Output cleared. Run code to see results.</p></div>';
+            log('Output cleared', 'info');
+        }
+        
+        function formatOutput(lines) {
+            return lines.map(line => {
+                let className = '';
+                if (line.includes('Error') || line.includes('❌')) className = 'error';
+                else if (line.includes('Success') || line.includes('✅')) className = 'success';
+                else if (line.includes('Warning') || line.includes('⚠️')) className = 'warning';
+                
+                return `<div class="${className}">${line || '&nbsp;'}</div>`;
+            }).join('');
+        }
+        
+        function runCode() {
+            const code = codeInput.value;
+            log('🚀 Starting code execution...', 'info');
+            
+            outputDiv.innerHTML = '<div style="color: #fbbf24;">🔄 Executing code...</div>';
+            
+            setTimeout(() => {
+                try {
+                    const logs = [];
+                    const originalLog = console.log;
+                    
+                    console.log = (...args) => {
+                        const message = args.map(arg => 
+                            typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+                        ).join(' ');
+                        logs.push(message);
+                        originalLog.apply(console, args);
+                    };
+                    
+                    eval(code);
+                    console.log = originalLog;
+                    
+                    const separator = '='.repeat(50);
+                    const output = [
+                        '<div class="success">✅ Execution Successful</div>',
+                        `<div>${separator}</div>`,
+                        '<div>&nbsp;</div>',
+                        formatOutput(logs.length > 0 ? logs : ['Code executed successfully (no output)']),
+                        '<div>&nbsp;</div>',
+                        `<div>${separator}</div>`,
+                        '<div>⏱️  Execution Time: ~5ms</div>',
+                        '<div>📊 Exit Code: 0</div>'
+                    ].join('');
+                    
+                    outputDiv.innerHTML = output;
+                    log('✅ Code executed successfully', 'success');
+                    
+                } catch (error) {
+                    const separator = '='.repeat(50);
+                    const output = [
+                        '<div class="error">❌ Execution Failed</div>',
+                        `<div>${separator}</div>`,
+                        '<div>&nbsp;</div>',
+                        `<div class="error">${error.message}</div>`,
+                        '<div>&nbsp;</div>',
+                        `<div>${separator}</div>`,
+                        '<div>📊 Exit Code: 1</div>'
+                    ].join('');
+                    
+                    outputDiv.innerHTML = output;
+                    log('❌ Execution failed: ' + error.message, 'error');
+                }
+            }, 500);
+        }
+        
+        function testSuccess() {
+            const separator = '='.repeat(50);
+            const output = [
+                '<div class="success">✅ Execution Successful</div>',
+                `<div>${separator}</div>`,
+                '<div>&nbsp;</div>',
+                '<div>Hello from FlowState!</div>',
+                '<div>This is a test output</div>',
+                '<div class="success">✅ All tests passed!</div>',
+                '<div>&nbsp;</div>',
+                `<div>${separator}</div>`,
+                '<div>⏱️  Execution Time: 42ms</div>',
+                '<div>📊 Exit Code: 0</div>'
+            ].join('');
+            
+            outputDiv.innerHTML = output;
+            log('✅ Success test displayed', 'success');
+        }
+        
+        function testError() {
+            const separator = '='.repeat(50);
+            const output = [
+                '<div class="error">❌ Execution Failed</div>',
+                `<div>${separator}</div>`,
+                '<div>&nbsp;</div>',
+                '<div class="error">ReferenceError: undefined variable</div>',
+                '<div class="error">at line 5:10</div>',
+                '<div>&nbsp;</div>',
+                `<div>${separator}</div>`,
+                '<div>📊 Exit Code: 1</div>'
+            ].join('');
+            
+            outputDiv.innerHTML = output;
+            log('❌ Error test displayed', 'error');
+        }
+        
+        // Initial log
+        log('Test page loaded successfully', 'success');
+    </script>
+</body>
+</html>

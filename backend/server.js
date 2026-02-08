@@ -1,0 +1,129 @@
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const passport = require('./config/passport');
+require('dotenv').config();
+
+// Startup checks for required env
+if (!process.env.JWT_SECRET) {
+  console.warn('⚠️  JWT_SECRET is not set. Create backend/.env with JWT_SECRET=your-secret-key');
+}
+if (!process.env.GEMINI_API_KEY) {
+  console.warn('⚠️  GEMINI_API_KEY is not set. AI features (explain, chat, learn-chat) will use fallbacks or fail.');
+}
+
+const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/users');
+const aiRoutes = require('./routes/ai');
+const learningRoutes = require('./routes/learning');
+const projectsRoutes = require('./routes/projects');
+const analyticsRoutes = require('./routes/analytics');
+const playgroundRoutes = require('./routes/playground');
+const snippetsRoutes = require('./routes/snippets');
+const bookmarksRoutes = require('./routes/bookmarks');
+const notificationsRoutes = require('./routes/notifications');
+const badgesRoutes = require('./routes/badges');
+const shareRoutes = require('./routes/share');
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Security middleware
+app.use(helmet());
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000, // Increased for development
+  message: 'Too many requests from this IP, please try again later.',
+});
+app.use('/api/', limiter);
+
+// CORS configuration
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+}));
+
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Initialize Passport
+app.use(passport.initialize());
+
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/learning', learningRoutes);
+app.use('/api/projects', projectsRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/playground', playgroundRoutes);
+app.use('/api/snippets', snippetsRoutes);
+app.use('/api/snippets/', snippetsRoutes); // also match trailing slash
+app.use('/api/bookmarks', bookmarksRoutes);
+app.use('/api/notifications', notificationsRoutes);
+app.use('/api/badges', badgesRoutes);
+app.use('/api/share', shareRoutes);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({
+      error: 'Validation Error',
+      message: err.message,
+    });
+  }
+
+  if (err.name === 'UnauthorizedError') {
+    return res.status(401).json({
+      error: 'Unauthorized',
+      message: 'Invalid token',
+    });
+  }
+
+  res.status(500).json({
+    error: 'Internal Server Error',
+    message: process.env.NODE_ENV === 'production'
+      ? 'Something went wrong!'
+      : err.message,
+  });
+});
+
+// 404 handler (must be last)
+app.use((req, res) => {
+  const isApi = req.path.startsWith('/api/');
+  if (isApi) console.warn('⚠️ 404:', req.method, req.originalUrl);
+  res.status(404).json({
+    error: 'Not Found',
+    message: 'The requested resource was not found',
+    ...(isApi && {
+      hint: 'In the backend folder run: npm start (or npm run server), then refresh.',
+      path: req.path,
+      method: req.method,
+    }),
+  });
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
+  console.log(`📌 API routes: /api/health, /api/auth, /api/snippets, /api/badges, ...`);
+});
+
+module.exports = app;
