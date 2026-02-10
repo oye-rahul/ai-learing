@@ -6,17 +6,14 @@ services:
     plan: free
     branch: main
     rootDir: backend
-    buildCommand: npm install
-    startCommand: npm start
+    buildCommand: npm install --production
+    startCommand: node server.js
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 5000
       - key: JWT_SECRET
-        generateValue: true
+        value: ai-learning-super-secret-key-2024-change-this-in-production
       - key: GEMINI_API_KEY
-        sync: false
+        value: AIzaSyDQLirYTllwUuTc2CpddevvPhkuWpDDi3I
       - key: FRONTEND_URL
         value: https://ai-learing.vercel.app
-    healthCheckPath: /api/health
