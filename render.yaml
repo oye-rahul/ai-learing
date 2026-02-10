@@ -5,11 +5,14 @@ services:
     region: oregon
     plan: free
     branch: main
-    buildCommand: cd backend && npm install
-    startCommand: cd backend && node server.js
+    rootDir: backend
+    buildCommand: npm ci --only=production
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 10000
       - key: JWT_SECRET
         value: ai-learning-super-secret-key-2024-change-this-in-production
       - key: GEMINI_API_KEY
