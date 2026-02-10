@@ -68,12 +68,44 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/badges', badgesRoutes);
 app.use('/api/share', shareRoutes);
 
-// Health check endpoint
+// Health check endpoints (for Render and other platforms)
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+  });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
+  });
+});
+
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    message: 'AI Learning Platform API',
+    status: 'running',
+    version: '1.0.0',
+    endpoints: {
+      health: '/health or /api/health',
+      auth: '/api/auth/*',
+      users: '/api/users/*',
+      ai: '/api/ai/*',
+      learning: '/api/learning/*',
+      projects: '/api/projects/*',
+      analytics: '/api/analytics/*',
+      playground: '/api/playground/*',
+      snippets: '/api/snippets/*',
+      bookmarks: '/api/bookmarks/*',
+      notifications: '/api/notifications/*',
+      badges: '/api/badges/*',
+      share: '/api/share/*'
+    }
   });
 });
 
@@ -118,13 +150,14 @@ app.use((req, res) => {
   });
 });
 
-// Start server (only in non-serverless environment)
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
-  app.listen(PORT, () => {
+// Start server (skip only in Vercel serverless environment)
+if (!process.env.VERCEL) {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`🌐 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3000'}`);
-    console.log(`📌 API routes: /api/health, /api/auth, /api/snippets, /api/badges, ...`);
+    console.log(`📌 Health check: /health or /api/health`);
+    console.log(`📌 API routes: /api/auth, /api/snippets, /api/badges, ...`);
   });
 }
 
