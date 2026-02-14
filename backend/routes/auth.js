@@ -4,7 +4,7 @@ const { body, validationResult } = require('express-validator');
 const { v4: uuidv4 } = require('uuid');
 const { query } = require('../config/database');
 const { generateTokens, verifyRefreshToken, authenticateToken } = require('../middleware/auth');
-const passport = require('../config/passport');
+
 
 const router = express.Router();
 
@@ -303,32 +303,3 @@ router.post('/reset-password-with-token', [
 });
 
 module.exports = router;
-
-
-// Google OAuth routes
-router.get('/google',
-  passport.authenticate('google', { 
-    scope: ['profile', 'email'],
-    session: false 
-  })
-);
-
-router.get('/google/callback',
-  passport.authenticate('google', { 
-    session: false,
-    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/login?error=google_auth_failed`
-  }),
-  async (req, res) => {
-    try {
-      // Generate JWT tokens
-      const { accessToken, refreshToken } = generateTokens(req.user.id);
-      
-      // Redirect to frontend with tokens
-      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-      res.redirect(`${frontendUrl}/auth/google/callback?token=${accessToken}&refreshToken=${refreshToken}`);
-    } catch (error) {
-      console.error('Google callback error:', error);
-      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/login?error=auth_failed`);
-    }
-  }
-);

@@ -19,35 +19,41 @@ interface AuthState {
 const initialState: AuthState = {
   user: null,
   token: localStorage.getItem('token'),
-  isAuthenticated: false,
+  isAuthenticated: !!localStorage.getItem('token'), // Set to true if token exists
   loading: false,
   error: null,
 };
 
-// Mock authentication - no backend needed
+// Real authentication with backend API
 export const login = createAsyncThunk(
   'auth/login',
-  async (credentials: { email: string; password: string }) => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Create mock user
-    const mockUser: User = {
-      id: 'mock-user-' + Date.now(),
-      email: credentials.email,
-      username: credentials.email.split('@')[0],
-      role: 'intermediate',
-      created_at: new Date().toISOString(),
-    };
-    
-    const mockToken = 'mock-token-' + Date.now();
-    localStorage.setItem('token', mockToken);
-    localStorage.setItem('user', JSON.stringify(mockUser));
-    
-    return {
-      user: mockUser,
-      token: mockToken,
-    };
+  async (credentials: { email: string; password: string }, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return rejectWithValue(data.message || 'Login failed');
+      }
+
+      // Store token and user in localStorage
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      return {
+        user: data.user,
+        token: data.token,
+      };
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Network error');
+    }
   }
 );
 
@@ -58,27 +64,33 @@ export const register = createAsyncThunk(
     password: string; 
     username: string; 
     role: 'beginner' | 'intermediate' | 'expert' 
-  }) => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Create mock user
-    const mockUser: User = {
-      id: 'mock-user-' + Date.now(),
-      email: userData.email,
-      username: userData.username,
-      role: userData.role,
-      created_at: new Date().toISOString(),
-    };
-    
-    const mockToken = 'mock-token-' + Date.now();
-    localStorage.setItem('token', mockToken);
-    localStorage.setItem('user', JSON.stringify(mockUser));
-    
-    return {
-      user: mockUser,
-      token: mockToken,
-    };
+  }, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return rejectWithValue(data.message || 'Registration failed');
+      }
+
+      // Store token and user in localStorage
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      return {
+        user: data.user,
+        token: data.token,
+      };
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Network error');
+    }
   }
 );
 
@@ -94,7 +106,7 @@ export const checkAuth = createAsyncThunk(
       }
       
       const user = JSON.parse(userStr);
-      return { user };
+      return { user, token };
     } catch (error: any) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -149,7 +161,10 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.user = null;
         state.token = null;
-        state.error = action.payload as string;
+        state.error = action.payload as string || 'Login failed';
+        // Clear localStorage on failed login
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
       })
       // Register
       .addCase(register.pending, (state) => {
@@ -168,7 +183,10 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.user = null;
         state.token = null;
-        state.error = action.payload as string;
+        state.error = action.payload as string || 'Registration failed';
+        // Clear localStorage on failed registration
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
       })
       // Check Auth
       .addCase(checkAuth.pending, (state) => {
@@ -178,6 +196,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.isAuthenticated = true;
         state.user = action.payload.user;
+        state.token = action.payload.token;
         state.error = null;
       })
       .addCase(checkAuth.rejected, (state) => {

@@ -31,8 +31,16 @@ const SettingsPage: React.FC = () => {
   });
 
   const [apiSettings, setApiSettings] = useState({
-    openai_key: '',
+    gemini_key: '',
   });
+
+  // Load saved API key on mount
+  useEffect(() => {
+    const savedKey = localStorage.getItem('gemini_api_key');
+    if (savedKey) {
+      setApiSettings({ gemini_key: savedKey });
+    }
+  }, []);
 
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
 
@@ -217,20 +225,118 @@ const SettingsPage: React.FC = () => {
       {/* API Settings */}
       <Card>
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">
-          API Configuration
+          🔑 API Configuration
         </h2>
         <div className="space-y-4">
+          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <h3 className="font-medium text-blue-800 dark:text-blue-200 mb-2">
+              💡 How to get your Gemini API Key:
+            </h3>
+            <ol className="text-sm text-blue-700 dark:text-blue-300 space-y-1 list-decimal list-inside">
+              <li>Visit <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline font-semibold">Google AI Studio</a> (NOT Google Cloud Console)</li>
+              <li>Click <strong>"Create API Key"</strong> → Choose <strong>"Create API key in new project"</strong></li>
+              <li>Wait for key generation and copy it (starts with "AIza...")</li>
+              <li>Paste it below and click "Save API Key" to verify</li>
+            </ol>
+            <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+              ⚠️ Important: Use Google AI Studio, not Google Cloud Console, for best compatibility
+            </p>
+          </div>
+
           <Input
-            label="OpenAI API Key"
+            label="Google Gemini API Key"
             type="password"
-            value={apiSettings.openai_key}
-            onChange={(e) => setApiSettings({ ...apiSettings, openai_key: e.target.value })}
-            placeholder="sk-..."
-            helperText="Optional: Use your own OpenAI API key for unlimited AI assistance"
+            value={apiSettings.gemini_key}
+            onChange={(e) => setApiSettings({ ...apiSettings, gemini_key: e.target.value })}
+            placeholder="AIzaSy..."
+            helperText="Your API key is stored locally and used for all AI features"
+            leftIcon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+              </svg>
+            }
           />
-          <div className="flex justify-end">
-            <Button variant="secondary">
-              Save API Settings
+          
+          {apiSettings.gemini_key && (
+            <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+              <p className="text-sm text-green-700 dark:text-green-300 flex items-center">
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                API Key is configured and will be used for all AI features
+              </p>
+            </div>
+          )}
+
+          <div className="flex justify-between items-center">
+            <div className="flex gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => {
+                  localStorage.removeItem('gemini_api_key');
+                  setApiSettings({ gemini_key: '' });
+                  toast.success('API key removed. App will use fallback responses.');
+                }}
+              >
+                Clear API Key
+              </Button>
+              <Button 
+                variant="secondary" 
+                size="sm"
+                onClick={() => {
+                  const key = localStorage.getItem('gemini_api_key');
+                  if (key) {
+                    toast.info(`Current key: ${key.substring(0, 15)}...`);
+                  } else {
+                    toast.info('No API key saved. Using fallback mode.');
+                  }
+                }}
+              >
+                Check Current Key
+              </Button>
+            </div>
+            <Button 
+              variant="primary"
+              onClick={async () => {
+                if (!apiSettings.gemini_key) {
+                  toast.error('Please enter an API key');
+                  return;
+                }
+                
+                // Save to localStorage first
+                localStorage.setItem('gemini_api_key', apiSettings.gemini_key);
+                toast.success('✅ API Key saved! Testing...');
+                
+                // Test the API key (optional - don't block on failure)
+                try {
+                  const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/ai/test-key`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                      'X-Gemini-Key': apiSettings.gemini_key
+                    }
+                  });
+                  
+                  const data = await response.json();
+                  
+                  if (response.ok && data.success) {
+                    toast.success('✅ API Key verified and working!', { autoClose: 3000 });
+                  } else {
+                    toast.warning('⚠️ API Key saved but verification failed. You can still try using it - some features may work.', {
+                      autoClose: 5000
+                    });
+                  }
+                } catch (error) {
+                  console.error('API key test error:', error);
+                  toast.info('API Key saved. Verification skipped (backend might be offline). Try using the app!', {
+                    autoClose: 5000
+                  });
+                }
+              }}
+            >
+              Save API Key
             </Button>
           </div>
         </div>

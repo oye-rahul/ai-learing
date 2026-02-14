@@ -1,16 +1,113 @@
+require('dotenv').config();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 class GeminiService {
-  constructor() {
-    const apiKey = process.env.GEMINI_API_KEY;
+  constructor(customApiKey = null) {
+    const apiKey = customApiKey || process.env.GEMINI_API_KEY;
+    this.apiKey = apiKey;
+    this.fallbackMode = !apiKey;
+    // Use models that are confirmed to work with this API key
+    this.modelsToTry = [
+      'gemini-2.5-flash',      // Primary - fast and efficient
+      'gemini-2.0-flash',      // Backup 1
+      'gemini-flash-latest',   // Backup 2 - always points to latest
+      'gemini-2.5-pro'         // Backup 3 - more powerful but slower
+    ];
+    this.currentModelIndex = 0;
+    this.lastResponseUsedFallback = false;
+
     if (!apiKey) {
-      console.warn('⚠️ GEMINI_API_KEY not found in environment variables');
-    } else {
-      console.log('✅ Gemini API Key loaded');
+      console.warn('⚠️ No Gemini API key found - AI features will use fallback responses');
+      this.genAI = null;
+      this.model = null;
+      this.fallbackMode = true;
+      this.lastResponseUsedFallback = true;
+      return;
     }
-    this.genAI = new GoogleGenerativeAI(apiKey);
-    // Use gemini-2.5-flash (latest model with free tier access)
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+    this._initializeModel();
+  }
+
+  _initializeModel() {
+    this.lastResponseUsedFallback = false;
+    try {
+      const modelName = this.modelsToTry[this.currentModelIndex];
+      console.log(`🔑 Initializing Gemini AI with key: ${this.apiKey.substring(0, 10)}... (Model: ${modelName})`);
+      this.genAI = new GoogleGenerativeAI(this.apiKey);
+
+      this.model = this.genAI.getGenerativeModel({
+        model: modelName,
+        safetySettings: [
+          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 2048,
+        }
+      });
+
+      this.fallbackMode = false;
+    } catch (error) {
+      console.error('❌ Failed to initialize Gemini AI:', error.message);
+      this.fallbackMode = true;
+    }
+  }
+
+  // Helper to handle API calls with logging and error mapping
+  async _callApi(prompt, taskName = 'AI Task') {
+    if (this.fallbackMode || !this.model) {
+      console.warn(`⚠️ Using fallback mode for ${taskName}`);
+      this.lastResponseUsedFallback = true;
+      const { getFallbackResponse } = require('./fallbackResponses');
+      return getFallbackResponse(prompt);
+    }
+
+    try {
+      console.log(`🤖 [Gemini] Executing ${taskName} using ${this.modelsToTry[this.currentModelIndex]}...`);
+      const result = await this.model.generateContent(prompt);
+
+      if (!result || !result.response) {
+        throw new Error('Empty response from Gemini API');
+      }
+
+      const response = await result.response;
+      const text = response.text();
+
+      if (!text) {
+        if (response.promptFeedback && response.promptFeedback.blockReason) {
+          this.lastResponseUsedFallback = true;
+          return "I'm sorry, but I cannot fulfill this request due to safety restrictions. Please try rephrasing your prompt.";
+        }
+        throw new Error('No text generated');
+      }
+
+      console.log(`✅ [Gemini] ${taskName} SUCCESS`);
+      this.lastResponseUsedFallback = false;
+      return text;
+    } catch (error) {
+      console.error(`❌ [Gemini] ${taskName} ERROR:`, error.message);
+
+      // If quota or heavy traffic, try the next model
+      if ((error.message.includes('quota') || error.message.includes('429') || error.message.includes('503')) &&
+        this.currentModelIndex < this.modelsToTry.length - 1) {
+
+        console.warn(`🔄 Quota hit for ${this.modelsToTry[this.currentModelIndex]}. Trying next model...`);
+        this.currentModelIndex++;
+        this._initializeModel();
+        return this._callApi(prompt, taskName);
+      }
+
+      // Final fallback to pre-defined responses
+      console.warn('⚠️ All API attempts failed or terminal error. Using fallback response.');
+      this.lastResponseUsedFallback = true;
+      const { getFallbackResponse } = require('./fallbackResponses');
+      return getFallbackResponse(prompt);
+    }
   }
 
   async explainCode(code, language) {
@@ -29,14 +126,7 @@ Please provide:
 
 Make your explanation clear and educational for developers learning ${language}.`;
 
-    try {
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
-    } catch (error) {
-      console.error('Gemini API error:', error);
-      throw new Error('Failed to explain code with Gemini AI');
-    }
+    return this._callApi(prompt, 'Explain Code');
   }
 
   async optimizeCode(code, language) {
@@ -56,14 +146,7 @@ Please provide:
 
 Focus on making the code more efficient, readable, and maintainable.`;
 
-    try {
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
-    } catch (error) {
-      console.error('Gemini API error:', error);
-      throw new Error('Failed to optimize code with Gemini AI');
-    }
+    return this._callApi(prompt, 'Optimize Code');
   }
 
   async debugCode(code, language, errorMessage = '') {
@@ -76,19 +159,24 @@ ${code}
 
 ${errorMessage ? `Error: ${errorMessage}\n\n` : ''}
 
-CRITICAL INSTRUCTIONS:
-1. START your response with the FIXED CODE in a code block
-2. Use this EXACT format for the fixed code:
+CRITICAL INSTRUCTIONS - FOLLOW THIS FORMAT EXACTLY:
+
+1. START your response with the COMPLETE FIXED CODE in a code block
+2. Use this EXACT format:
 
 \`\`\`${language}
-[put the complete corrected code here]
+[put the complete corrected code here - include ALL the code, not just the changed parts]
 \`\`\`
 
 3. AFTER the code block, explain what you fixed
 
 Example response format:
+
 \`\`\`${language}
-[corrected code]
+// Complete corrected code goes here
+function example() {
+  return "fixed";
+}
 \`\`\`
 
 ### Issues Fixed:
@@ -98,16 +186,14 @@ Example response format:
 ### Explanation:
 [detailed explanation]
 
+IMPORTANT: 
+- Include the COMPLETE working code, not just snippets
+- Make sure the code is ready to run immediately
+- Don't add comments like "// rest of code unchanged" - include everything
+
 Now fix the code above following this format exactly.`;
 
-    try {
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
-    } catch (error) {
-      console.error('Gemini API error:', error);
-      throw new Error('Failed to debug code with Gemini AI');
-    }
+    return this._callApi(prompt, 'Debug Code');
   }
 
   async convertCode(code, fromLanguage, toLanguage) {
@@ -127,14 +213,7 @@ Please provide:
 
 Ensure the converted code is idiomatic and follows ${toLanguage} conventions.`;
 
-    try {
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
-    } catch (error) {
-      console.error('Gemini API error:', error);
-      throw new Error('Failed to convert code with Gemini AI');
-    }
+    return this._callApi(prompt, 'Convert Code');
   }
 
   async generateCode(description, language) {
@@ -151,14 +230,7 @@ Please provide:
 
 Make sure the code follows ${language} best practices and is production-ready.`;
 
-    try {
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
-    } catch (error) {
-      console.error('Gemini API error:', error);
-      throw new Error('Failed to generate code with Gemini AI');
-    }
+    return this._callApi(prompt, 'Generate Code');
   }
 
   async chatWithCode(message, code, language, conversationHistory = []) {
@@ -184,14 +256,7 @@ Please provide a helpful, detailed response that:
 
 Be conversational but professional, and focus on being genuinely helpful for their coding journey.`;
 
-    try {
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
-    } catch (error) {
-      console.error('Gemini API error:', error);
-      throw new Error('Failed to chat with Gemini AI');
-    }
+    return this._callApi(prompt, 'Chat with Code');
   }
 
   async getCodeSuggestions(partialCode, language, cursorPosition) {
@@ -213,14 +278,7 @@ Please suggest:
 
 Provide practical, contextually relevant suggestions that would help the developer continue coding efficiently.`;
 
-    try {
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
-    } catch (error) {
-      console.error('Gemini API error:', error);
-      throw new Error('Failed to get code suggestions with Gemini AI');
-    }
+    return this._callApi(prompt, 'Get Suggestions');
   }
 
   async executeCode(code, language) {
@@ -240,21 +298,10 @@ Rules for output:
 
 Terminal Output:`;
 
-    try {
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
-    } catch (error) {
-      console.error('Gemini API error:', error);
-      throw new Error('Failed to execute code with Gemini AI');
-    }
+    return this._callApi(prompt, 'Code Simulation');
   }
 
   async learningChat(message, conversationHistory = []) {
-    if (!process.env.GEMINI_API_KEY) {
-      throw new Error('GEMINI_API_KEY is not configured');
-    }
-
     const historyContext = conversationHistory.length > 0
       ? `Previous conversation:\n${conversationHistory.map(h => `${h.role}: ${h.content}`).join('\n')}\n\n`
       : '';
@@ -274,27 +321,10 @@ Please provide a helpful response that:
 
 Remember: You're not just answering questions, you're helping someone learn and grow as a developer. Make learning enjoyable and accessible!`;
 
-    try {
-      console.log('Calling Gemini API for learning chat...');
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-      console.log('Gemini API response received successfully');
-      return text;
-    } catch (error) {
-      console.error('Gemini API error in learningChat:', {
-        message: error.message,
-        status: error.status,
-        statusText: error.statusText,
-      });
-
-      if (error.message.includes('API_KEY_INVALID')) {
-        throw new Error('Invalid Gemini API key. Please check your configuration.');
-      }
-
-      throw new Error(`Failed to chat with AI Learnixo: ${error.message}`);
-    }
+    return this._callApi(prompt, 'Learning Chat');
   }
 }
 
+// Export both the class and a default instance
 module.exports = new GeminiService();
+module.exports.GeminiService = GeminiService;

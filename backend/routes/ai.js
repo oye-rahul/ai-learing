@@ -8,6 +8,64 @@ const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Helper to handle Gemini API errors consistently
+const handleGeminiError = (error, res) => {
+  console.error('Gemini API error:', error);
+
+  if (error.message === 'FALLBACK_MODE') {
+    return res.status(503).json({
+      error: 'Service Unavailable',
+      message: 'The AI service is currently in demo mode or unavailable. Please try again later or check your API key.',
+    });
+  }
+
+  if (error.message === 'API_QUOTA_EXCEEDED' || error.message.includes('quota') || error.message.includes('limit')) {
+    return res.status(429).json({
+      error: 'API quota exceeded',
+      message: 'Gemini API quota has been exceeded. Please try again later.',
+    });
+  }
+
+  if (error.message.includes('API key') || error.message.includes('API_KEY_INVALID') || error.status === 400) {
+    return res.status(400).json({
+      error: 'Invalid API Key',
+      message: 'The Gemini API key is invalid or missing. Please ensure you have a valid key in backend/.env'
+    });
+  }
+
+  if (error.status === 404 || error.message.includes('not found')) {
+    return res.status(404).json({
+      error: 'Model Unavailable',
+      message: 'The AI model is not accessible. Please ensure you are using the correct model (gemini-2.5-flash) and it is enabled for your API key.'
+    });
+  }
+
+  return res.status(error.status || 500).json({
+    error: 'Internal server error',
+    message: error.message || 'Failed to process AI request',
+  });
+};
+
+// Helper to get Gemini service with custom API key if provided
+const getGeminiService = (req) => {
+  const customApiKey = req.headers['x-gemini-key'];
+
+  // Only use custom key if it's a non-empty string and not the string "null" or "undefined"
+  if (customApiKey &&
+    customApiKey.trim() !== '' &&
+    customApiKey !== 'null' &&
+    customApiKey !== 'undefined' &&
+    customApiKey !== 'undefined') {
+
+    console.log(`✅ Using custom API key from request header (Starts with: ${customApiKey.substring(0, 10)}...)`);
+    const { GeminiService } = require('../services/geminiService');
+    return new GeminiService(customApiKey);
+  }
+
+  console.log('ℹ️ Using default API key from environment');
+  return geminiService;
+};
+
 // Helper function to log AI interactions (SQLite placeholders)
 const logAIInteraction = async (userId, promptType, inputCode, output, tokensUsed = 0) => {
   try {
@@ -37,7 +95,8 @@ router.post('/explain', authenticateToken, [
 
     const { code, language } = req.body;
 
-    const explanation = await geminiService.explainCode(code, language);
+    const service = getGeminiService(req);
+    const explanation = await service.explainCode(code, language);
 
     // Log the interaction
     await logAIInteraction(req.user.id, 'explain', code, explanation, 0);
@@ -50,33 +109,7 @@ router.post('/explain', authenticateToken, [
       tokens_used: 0,
     });
   } catch (error) {
-    console.error('Explain code error:', error);
-
-    if (error.message.includes('quota') || error.message.includes('limit')) {
-      return res.status(429).json({
-        error: 'API quota exceeded',
-        message: 'Gemini API quota has been exceeded. Please try again later.',
-      });
-    }
-
-    if (error.message.includes('API key') || error.message.includes('API_KEY_INVALID') || error.status === 400) {
-      return res.status(400).json({
-        error: 'Invalid API Key',
-        message: 'The Gemini API key is invalid or missing. Please update backend/.env with a valid key.'
-      });
-    }
-
-    if (error.status === 404 || error.message.includes('not found')) {
-      return res.status(404).json({
-        error: 'Model Unavailable',
-        message: 'The AI model (gemini-1.5-flash) is currently unavailable or not supported by your API key. Please ensure Generative Language API is enabled.'
-      });
-    }
-
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to explain code',
-    });
+    return handleGeminiError(error, res);
   }
 });
 
@@ -96,7 +129,8 @@ router.post('/optimize', authenticateToken, [
 
     const { code, language } = req.body;
 
-    const response = await geminiService.optimizeCode(code, language);
+    const service = getGeminiService(req);
+    const response = await service.optimizeCode(code, language);
 
     // Extract optimized code (simple extraction, could be improved)
     const codeMatch = response.match(/```[\w]*\n([\s\S]*?)\n```/);
@@ -133,7 +167,7 @@ router.post('/optimize', authenticateToken, [
     if (error.status === 404 || error.message.includes('not found')) {
       return res.status(404).json({
         error: 'Model Unavailable',
-        message: 'The AI model (gemini-1.5-flash) is currently unavailable or not supported by your API key. Please ensure Generative Language API is enabled.'
+        message: 'The AI model (gemini-2.5-flash) is currently unavailable or not supported by your API key. Please ensure Generative Language API is enabled.'
       });
     }
 
@@ -161,7 +195,8 @@ router.post('/debug', authenticateToken, [
 
     const { code, language, error: errorMessage } = req.body;
 
-    const debugSuggestions = await geminiService.debugCode(code, language, errorMessage);
+    const service = getGeminiService(req);
+    const debugSuggestions = await service.debugCode(code, language, errorMessage);
 
     // Log the interaction
     await logAIInteraction(req.user.id, 'debug', code, debugSuggestions, 0);
@@ -194,7 +229,7 @@ router.post('/debug', authenticateToken, [
     if (error.status === 404 || error.message.includes('not found')) {
       return res.status(404).json({
         error: 'Model Unavailable',
-        message: 'The AI model (gemini-1.5-flash) is currently unavailable or not supported by your API key. Please ensure Generative Language API is enabled.'
+        message: 'The AI model (gemini-2.5-flash) is currently unavailable or not supported by your API key. Please ensure Generative Language API is enabled.'
       });
     }
 
@@ -222,7 +257,8 @@ router.post('/convert', authenticateToken, [
 
     const { code, fromLanguage, toLanguage } = req.body;
 
-    const response = await geminiService.convertCode(code, fromLanguage, toLanguage);
+    const service = getGeminiService(req);
+    const response = await service.convertCode(code, fromLanguage, toLanguage);
 
     // Extract converted code
     const codeMatch = response.match(/```[\w]*\n([\s\S]*?)\n```/);
@@ -259,7 +295,7 @@ router.post('/convert', authenticateToken, [
     if (error.status === 404 || error.message.includes('not found')) {
       return res.status(404).json({
         error: 'Model Unavailable',
-        message: 'The AI model (gemini-1.5-flash) is currently unavailable or not supported by your API key. Please ensure Generative Language API is enabled.'
+        message: 'The AI model (gemini-2.5-flash) is currently unavailable or not supported by your API key. Please ensure Generative Language API is enabled.'
       });
     }
 
@@ -286,7 +322,8 @@ router.post('/generate', authenticateToken, [
 
     const { description, language } = req.body;
 
-    const response = await geminiService.generateCode(description, language);
+    const service = getGeminiService(req);
+    const response = await service.generateCode(description, language);
 
     // Extract generated code
     const codeMatch = response.match(/```[\w]*\n([\s\S]*?)\n```/);
@@ -323,7 +360,7 @@ router.post('/generate', authenticateToken, [
     if (error.status === 404 || error.message.includes('not found')) {
       return res.status(404).json({
         error: 'Model Unavailable',
-        message: 'The AI model (gemini-1.5-flash) is currently unavailable or not supported by your API key. Please ensure Generative Language API is enabled.'
+        message: 'The AI model (gemini-2.5-flash) is currently unavailable or not supported by your API key. Please ensure Generative Language API is enabled.'
       });
     }
 
@@ -352,7 +389,8 @@ router.post('/chat', authenticateToken, [
 
     const { message, code = '', language = 'javascript', conversationHistory = [] } = req.body;
 
-    const response = await geminiService.chatWithCode(message, code, language, conversationHistory);
+    const service = getGeminiService(req);
+    const response = await service.chatWithCode(message, code, language, conversationHistory);
 
     // Log the interaction
     await logAIInteraction(req.user.id, 'chat', message, response, 0);
@@ -386,7 +424,7 @@ router.post('/chat', authenticateToken, [
     if (error.status === 404 || error.message.includes('not found')) {
       return res.status(404).json({
         error: 'Model Unavailable',
-        message: 'The AI model (gemini-1.5-flash) is currently unavailable or not supported by your API key. Please ensure Generative Language API is enabled.'
+        message: 'The AI model (gemini-2.5-flash) is currently unavailable or not supported by your API key. Please ensure Generative Language API is enabled.'
       });
     }
 
@@ -414,7 +452,8 @@ router.post('/suggestions', authenticateToken, [
 
     const { partialCode, language, cursorPosition = 0 } = req.body;
 
-    const suggestions = await geminiService.getCodeSuggestions(partialCode, language, cursorPosition);
+    const service = getGeminiService(req);
+    const suggestions = await service.getCodeSuggestions(partialCode, language, cursorPosition);
 
     // Log the interaction
     await logAIInteraction(req.user.id, 'suggestions', partialCode, suggestions, 0);
@@ -447,7 +486,7 @@ router.post('/suggestions', authenticateToken, [
     if (error.status === 404 || error.message.includes('not found')) {
       return res.status(404).json({
         error: 'Model Unavailable',
-        message: 'The AI model (gemini-1.5-flash) is currently unavailable or not supported by your API key. Please ensure Generative Language API is enabled.'
+        message: 'The AI model (gemini-2.5-flash) is currently unavailable or not supported by your API key. Please ensure Generative Language API is enabled.'
       });
     }
 
@@ -474,7 +513,8 @@ router.post('/execute', authenticateToken, [
 
     const { code, language } = req.body;
 
-    const output = await geminiService.executeCode(code, language);
+    const service = getGeminiService(req);
+    const output = await service.executeCode(code, language);
 
     // Log the interaction
     await logAIInteraction(req.user.id, 'execute', code, output, 0);
@@ -507,7 +547,7 @@ router.post('/execute', authenticateToken, [
     if (error.status === 404 || error.message.includes('not found')) {
       return res.status(404).json({
         error: 'Model Unavailable',
-        message: 'The AI model (gemini-1.5-flash) is currently unavailable or not supported by your API key. Please ensure Generative Language API is enabled.'
+        message: 'The AI model (gemini-2.5-flash) is currently unavailable or not supported by your API key. Please ensure Generative Language API is enabled.'
       });
     }
 
@@ -536,16 +576,15 @@ router.post('/learn-chat', authenticateToken, [
     const { message, conversationHistory = [] } = req.body;
     console.log('Learning chat request:', { message, historyLength: conversationHistory.length });
 
-    let response;
-    let usedFallback = false;
+    const service = getGeminiService(req);
+    console.log('🔑 Using Gemini service for learning chat...');
+    const response = await service.learningChat(message, conversationHistory);
+    const usedFallback = service.lastResponseUsedFallback;
 
-    try {
-      response = await geminiService.learningChat(message, conversationHistory);
-      console.log('Learning chat response received from Gemini');
-    } catch (geminiError) {
-      console.warn('Gemini API failed, using fallback response:', geminiError.message);
-      response = getFallbackResponse(message);
-      usedFallback = true;
+    if (usedFallback) {
+      console.warn('⚠️ Response was generated using fallback mode');
+    } else {
+      console.log('✅ Learning chat response received from Gemini');
     }
 
     // Log the interaction
@@ -553,7 +592,6 @@ router.post('/learn-chat', authenticateToken, [
       await logAIInteraction(req.user.id, 'learn-chat', message, response, 0);
     } catch (logError) {
       console.error('Failed to log interaction:', logError);
-      // Continue even if logging fails
     }
 
     res.json({
@@ -569,6 +607,7 @@ router.post('/learn-chat', authenticateToken, [
       message: error.message,
       stack: error.stack,
       name: error.name,
+      status: error.status
     });
 
     if (error.message.includes('quota') || error.message.includes('limit')) {
@@ -578,16 +617,87 @@ router.post('/learn-chat', authenticateToken, [
       });
     }
 
-    if (error.message.includes('API key')) {
-      return res.status(500).json({
-        error: 'Configuration error',
-        message: 'AI service is not properly configured. Please check API key.',
+    if (error.message.includes('API key') || error.message.includes('API_KEY_INVALID')) {
+      return res.status(400).json({
+        error: 'Invalid API Key',
+        message: 'The Gemini API key is invalid. Please create a NEW key from Google AI Studio: https://aistudio.google.com/app/apikey'
+      });
+    }
+
+    if (error.status === 404 || error.message.includes('not found')) {
+      return res.status(404).json({
+        error: 'Model Unavailable',
+        message: 'The AI model is not accessible. Your API key might not have Generative Language API enabled. Please create a NEW key from Google AI Studio: https://aistudio.google.com/app/apikey'
       });
     }
 
     res.status(500).json({
       error: 'Internal server error',
       message: error.message || 'Failed to chat with AI Learnixo',
+    });
+  }
+});
+
+// Test API key endpoint
+router.post('/test-key', authenticateToken, async (req, res) => {
+  try {
+    const customApiKey = req.headers['x-gemini-key'];
+
+    if (!customApiKey) {
+      return res.status(400).json({
+        success: false,
+        error: 'No API key provided',
+        message: 'Please provide an API key in X-Gemini-Key header'
+      });
+    }
+
+    console.log('🔑 Testing API key:', customApiKey.substring(0, 10) + '...');
+
+    // Test the API key with a simple request
+    const { GeminiService } = require('../services/geminiService');
+    const service = new GeminiService(customApiKey);
+
+    // Simple test prompt
+    const testResponse = await service.learningChat('Say "Hello" in one word', []);
+
+    console.log('✅ API key test successful!');
+
+    res.json({
+      success: true,
+      message: 'API key is valid and working! All AI features are now active.',
+      tested: true
+    });
+  } catch (error) {
+    console.error('❌ API key test error:', error.message);
+
+    if (error.message.includes('API_KEY_INVALID') || error.message.includes('API key')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid API Key',
+        message: 'The API key is invalid. Please create a NEW key from Google AI Studio: https://aistudio.google.com/app/apikey'
+      });
+    }
+
+    if (error.status === 404 || error.message.includes('not found')) {
+      return res.status(404).json({
+        success: false,
+        error: 'Model Not Accessible',
+        message: 'Your API key cannot access Gemini models. Please create a NEW key from Google AI Studio (not Google Cloud Console): https://aistudio.google.com/app/apikey'
+      });
+    }
+
+    if (error.message.includes('quota') || error.message.includes('limit')) {
+      return res.status(429).json({
+        success: false,
+        error: 'Quota Exceeded',
+        message: 'API quota has been exceeded. Please try again later or use a different key.'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: 'Test failed',
+      message: error.message || 'Failed to verify API key. Please try creating a NEW key from Google AI Studio.'
     });
   }
 });

@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const passport = require('./config/passport');
 require('dotenv').config();
 
 // Startup checks for required env
@@ -10,7 +9,7 @@ if (!process.env.JWT_SECRET) {
   console.warn('⚠️  JWT_SECRET is not set. Create backend/.env with JWT_SECRET=your-secret-key');
 }
 if (!process.env.GEMINI_API_KEY) {
-  console.warn('⚠️  GEMINI_API_KEY is not set. AI features (explain, chat, learn-chat) will use fallbacks or fail.');
+  console.warn('⚠️  GEMINI_API_KEY is not set. Get FREE key: https://aistudio.google.com/app/apikey');
 }
 
 const authRoutes = require('./routes/auth');
@@ -49,9 +48,6 @@ app.use(cors({
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Initialize Passport
-app.use(passport.initialize());
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -161,4 +157,5 @@ if (!process.env.VERCEL) {
   });
 }
 
+module.exports = app;
 module.exports = app;

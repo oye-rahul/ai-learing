@@ -688,7 +688,7 @@ fetchUserData(456);`,
             <div className="flex items-center space-x-4">
               <Button
                 onClick={() => handleStartCourse('ai-ml-mastery')}
-                className="bg-white text-gray-700 hover:bg-purple-50 font-semibold"
+                className="bg-white text-purple-700 hover:bg-purple-50 font-semibold"
               >
                 Start Course
               </Button>

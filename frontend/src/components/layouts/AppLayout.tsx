@@ -31,7 +31,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         <Header />
 
         {/* Page Content */}
-        <main className={`flex-1 overflow-y-auto ${isLearningView || location.pathname.startsWith('/playground') ? 'p-0' : 'p-6'}`}>
+        <main className={`flex-1 overflow-y-auto ${isLearningView || location.pathname.startsWith('/playground') || location.pathname.startsWith('/ai-learnixo') ? 'p-0' : 'p-6'}`}>
           {children}
         </main>
       </div>

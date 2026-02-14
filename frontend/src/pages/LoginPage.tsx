@@ -11,7 +11,7 @@ import { toast } from 'react-toastify';
 const LoginPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { loading, error, isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { loading, error, isAuthenticated, user } = useSelector((state: RootState) => state.auth);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -22,12 +22,6 @@ const LoginPage: React.FC = () => {
     email: '',
     password: '',
   });
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    }
-  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     if (error) {
@@ -66,11 +60,14 @@ const LoginPage: React.FC = () => {
     }
 
     try {
-      await dispatch(login(formData)).unwrap();
+      const result = await dispatch(login(formData)).unwrap();
+      console.log('Login successful:', result);
       toast.success('Welcome back!');
-      navigate('/dashboard');
+      // Navigate immediately after successful login
+      navigate('/dashboard', { replace: true });
     } catch (error) {
-      // Error is handled by the useEffect above
+      console.error('Login error:', error);
+      toast.error('Invalid email or password');
     }
   };
 

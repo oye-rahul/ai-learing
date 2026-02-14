@@ -1,42 +1,88 @@
-// List all available models for the API key
+// List all available Gemini models for this API key
 require('dotenv').config();
-const axios = require('axios');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-async function listAvailableModels() {
-  const apiKey = process.env.GEMINI_API_KEY;
-  console.log('🔑 API Key:', apiKey ? 'Found' : 'NOT FOUND');
+async function listModels() {
+  console.log('\n🔍 Listing Available Gemini Models...\n');
+  console.log('API Key:', process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.substring(0, 10) + '...' : 'NOT FOUND');
   
-  if (!apiKey) {
-    console.error('❌ GEMINI_API_KEY not found');
+  if (!process.env.GEMINI_API_KEY) {
+    console.error('❌ No API key found in .env file');
     return;
   }
 
-  const versions = ['v1beta', 'v1'];
-
-  for (const version of versions) {
-    try {
-      console.log(`\n📡 Listing models for API ${version}...`);
-      const url = `https://generativelanguage.googleapis.com/${version}/models?key=${apiKey}`;
+  try {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    
+    // List all available models
+    console.log('\n📋 Fetching available models...\n');
+    
+    // Try to list models using the API
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models?key=' + process.env.GEMINI_API_KEY);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.models && data.models.length > 0) {
+      console.log(`✅ Found ${data.models.length} available models:\n`);
       
-      const response = await axios.get(url);
+      data.models.forEach((model, index) => {
+        console.log(`${index + 1}. ${model.name}`);
+        console.log(`   Display Name: ${model.displayName || 'N/A'}`);
+        console.log(`   Description: ${model.description || 'N/A'}`);
+        console.log(`   Supported Methods: ${model.supportedGenerationMethods ? model.supportedGenerationMethods.join(', ') : 'N/A'}`);
+        console.log('');
+      });
       
-      console.log(`✅ Found ${response.data.models?.length || 0} models:\n`);
+      // Find models that support generateContent
+      const contentModels = data.models.filter(m => 
+        m.supportedGenerationMethods && 
+        m.supportedGenerationMethods.includes('generateContent')
+      );
       
-      if (response.data.models) {
-        response.data.models.forEach(model => {
-          console.log(`  📦 ${model.name}`);
-          console.log(`     Display Name: ${model.displayName}`);
-          console.log(`     Supported: ${model.supportedGenerationMethods?.join(', ')}`);
-          console.log('');
+      if (contentModels.length > 0) {
+        console.log('\n✅ Models that support generateContent (use these!):\n');
+        contentModels.forEach(model => {
+          // Extract just the model name (remove "models/" prefix)
+          const modelName = model.name.replace('models/', '');
+          console.log(`   - ${modelName}`);
         });
+        
+        // Test the first available model
+        console.log('\n🧪 Testing first available model...\n');
+        const testModelName = contentModels[0].name.replace('models/', '');
+        console.log(`Testing: ${testModelName}`);
+        
+        const testModel = genAI.getGenerativeModel({ model: testModelName });
+        const result = await testModel.generateContent('Say "Hello" in one word');
+        const testResponse = await result.response;
+        const text = testResponse.text();
+        
+        console.log(`✅ SUCCESS! Response: ${text}`);
+        console.log(`\n🎉 Use this model in your code: ${testModelName}\n`);
+      } else {
+        console.log('\n❌ No models support generateContent method');
       }
-      
-      break; // Stop after first successful call
-      
-    } catch (error) {
-      console.log(`❌ ${version} failed: ${error.response?.status} - ${error.response?.data?.error?.message || error.message}`);
+    } else {
+      console.log('❌ No models found for this API key');
+    }
+    
+  } catch (error) {
+    console.error('\n❌ Error:', error.message);
+    
+    if (error.message.includes('403') || error.message.includes('API_KEY_INVALID')) {
+      console.log('\n💡 Your API key might be invalid or restricted.');
+      console.log('Create a NEW key at: https://aistudio.google.com/app/apikey');
+    } else if (error.message.includes('404')) {
+      console.log('\n💡 API endpoint not found. Your key might not have access to the Generative Language API.');
+      console.log('Create a NEW key at: https://aistudio.google.com/app/apikey');
+    } else {
+      console.log('\nFull error:', error);
     }
   }
 }
 
-listAvailableModels();
+listModels();

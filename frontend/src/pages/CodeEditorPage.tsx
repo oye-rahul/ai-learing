@@ -2,7 +2,9 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
 import Modal from '../components/shared/Modal';
-import axios from 'axios';
+import AIChatWindow from '../components/features/AIChatWindow';
+import api from '../services/api';
+import { aiAPI } from '../services/api';
 
 type FileType = {
   id: string;
@@ -73,8 +75,20 @@ export default function CodeEditorPageNew() {
   const [modalOpen, setModalOpen] = useState(false);
   const [isFixing, setIsFixing] = useState(false);
   const [codeUpdated, setCodeUpdated] = useState(false);
+  const [isExplaining, setIsExplaining] = useState(false);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
+  const [showConvertModal, setShowConvertModal] = useState(false);
+  const [targetLanguage, setTargetLanguage] = useState('python');
+
+  // AI Agent State
+  const [showAIAgent, setShowAIAgent] = useState(false);
 
   const activeFile = files.find(f => f.id === activeFileId);
+
+  // Editor Refs
+  const editorRef = React.useRef<any>(null);
+  const monacoRef = React.useRef<any>(null);
 
   // Reset code updated animation after 2 seconds
   useEffect(() => {
@@ -84,11 +98,38 @@ export default function CodeEditorPageNew() {
     }
   }, [codeUpdated]);
 
+  const handleEditorDidMount = (editor: any, monaco: any) => {
+    editorRef.current = editor;
+    monacoRef.current = monaco;
+  };
+
   const handleEditorChange = useCallback((value: string | undefined) => {
     if (!value) return;
-    setFiles(prev => prev.map(f => 
+    setFiles(prev => prev.map(f =>
       f.id === activeFileId ? { ...f, content: value } : f
     ));
+  }, [activeFileId]);
+
+  const handleUpdateCode = useCallback((newCode: string) => {
+    if (editorRef.current && monacoRef.current) {
+      const editor = editorRef.current;
+      const selection = editor.getSelection();
+
+      const op = {
+        range: selection,
+        text: newCode,
+        forceMoveMarkers: true
+      };
+
+      editor.executeEdits('ai-assistant', [op]);
+      editor.pushUndoStop();
+    } else {
+      // Fallback
+      setFiles(prev => prev.map(f =>
+        f.id === activeFileId ? { ...f, content: newCode } : f
+      ));
+    }
+    setCodeUpdated(true);
   }, [activeFileId]);
 
   const handleRunCode = useCallback(async () => {
@@ -127,7 +168,7 @@ export default function CodeEditorPageNew() {
 
       const backendLang = langMap[activeFile.language] || 'javascript';
 
-      const response = await axios.post('http://localhost:5000/api/playground/execute', {
+      const response = await api.post('/playground/execute', {
         code: activeFile.content,
         language: backendLang,
       });
@@ -166,7 +207,7 @@ export default function CodeEditorPageNew() {
   const handleCreateFile = useCallback((fileName: string) => {
     const ext = fileName.split('.').pop() || 'txt';
     const language = LANG_MAP[ext] || 'plaintext';
-    
+
     const newFile: FileType = {
       id: fileName,
       name: fileName,
@@ -186,104 +227,75 @@ export default function CodeEditorPageNew() {
     }
   }, [activeFileId, files]);
 
+  // Specific AI Actions (Legacy / Button based)
   const handleFixCode = useCallback(async () => {
     if (!activeFile) return;
-
     setIsFixing(true);
+    // Open AI Agent for a better experience
+    setShowAIAgent(true);
+    // You could pre-populate the chat here if desired, but letting the user type might be better
+    setIsFixing(false);
+  }, [activeFile]);
+
+  const handleConvertCode = useCallback(async () => {
+    if (!activeFile) return;
+
+    setIsConverting(true);
+    setShowConvertModal(false);
     setOutput([
       '# Terminal',
-      `$ Analyzing ${activeFile.name} for bugs...`,
-      '🤖 AI is reviewing your code...',
+      `$ 🔄 Converting ${activeFile.name} to ${targetLanguage}...`,
+      '🤖 AI is translating your code...',
       '',
     ]);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/ai/debug', {
+      const response = await aiAPI.convertCode({
         code: activeFile.content,
-        language: activeFile.language,
-      }, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
+        fromLanguage: activeFile.language,
+        toLanguage: targetLanguage,
       });
 
-      if (response.data.debug_suggestions) {
-        const aiResponse = response.data.debug_suggestions;
-        
-        // Try multiple patterns to extract fixed code
-        let fixedCode: string | null = null;
-        
-        // Pattern 1: Standard code block with language
-        let codeBlockMatch = aiResponse.match(/```[\w]*\n([\s\S]*?)\n```/);
-        
-        // Pattern 2: Look for "Corrected Code" or "Fixed Code" section
-        if (!codeBlockMatch) {
-          const correctedSection = aiResponse.match(/(?:Corrected|Fixed|Updated)\s+(?:Code|Version)[:\s]*\n*```[\w]*\n([\s\S]*?)\n```/i);
-          if (correctedSection) codeBlockMatch = correctedSection;
-        }
-        
-        // Pattern 3: First code block in response
-        if (!codeBlockMatch) {
-          codeBlockMatch = aiResponse.match(/```([\s\S]*?)```/);
-        }
-        
-        if (codeBlockMatch) {
-          // Extract code (handle both with and without language specifier)
-          const extractedCode = codeBlockMatch[1] || codeBlockMatch[0];
-          if (extractedCode) {
-            // Remove language identifier if present at start
-            fixedCode = extractedCode.replace(/^[\w]+\n/, '').trim();
-          }
-        }
-        
-        if (fixedCode && fixedCode.length > 10) {
-          // Apply the fixed code automatically
-          const codeToApply = fixedCode; // Create const to satisfy TypeScript
-          setFiles(prev => prev.map(f => 
-            f.id === activeFileId ? { ...f, content: codeToApply } : f
-          ));
-          
-          // Trigger highlight animation
-          setCodeUpdated(true);
-          
-          setOutput([
-            '# Terminal',
-            `$ ✅ Code Fixed Successfully!`,
-            '',
-            '--- Fixed Code ---',
-            codeToApply, // Show only the fixed code
-          ]);
-        } else {
-          // No code block found, just show suggestions
-          setOutput([
-            '# Terminal',
-            `$ 📋 AI Code Analysis Complete`,
-            '',
-            '--- AI Suggestions ---',
-            aiResponse,
-            '',
-            '💡 The AI provided analysis but no automatic fix.',
-            '   Review the suggestions above and apply changes manually.',
-          ]);
-        }
+      if (response.data.converted_code) {
+        const convertedCode = response.data.converted_code;
+
+        // Create new file with converted code
+        const newFileName = `${activeFile.name.split('.')[0]}_converted.${targetLanguage === 'javascript' ? 'js' : targetLanguage === 'python' ? 'py' : targetLanguage}`;
+        const newFile: FileType = {
+          id: newFileName,
+          name: newFileName,
+          language: targetLanguage,
+          content: convertedCode,
+        };
+
+        setFiles(prev => [...prev, newFile]);
+        setActiveFileId(newFileName);
+
+        setOutput([
+          '# Terminal',
+          `$ ✅ Code Converted Successfully!`,
+          '',
+          `--- Converted from ${activeFile.language} to ${targetLanguage} ---`,
+          response.data.explanation || 'Code has been converted to the target language.',
+          '',
+          `💡 New file created: ${newFileName}`,
+        ]);
       }
     } catch (error: any) {
       setOutput([
         '# Terminal',
-        `$ Failed to analyze code`,
+        `$ ❌ Failed to convert code`,
         '',
         '--- Error ---',
         error.response?.data?.message || error.message || 'AI service unavailable',
-        '',
-        '💡 Tip: Make sure backend server is running and Gemini API key is configured',
       ]);
     } finally {
-      setIsFixing(false);
+      setIsConverting(false);
     }
-  }, [activeFile, activeFileId]);
+  }, [activeFile, activeFileId, targetLanguage]);
 
   return (
-    <div className="h-screen flex flex-col bg-[#1e1e1e] text-white">
+    <div className="h-screen flex flex-col bg-[#1e1e1e] text-white relative">
       {/* Header */}
       <header className="h-12 flex items-center justify-between px-4 bg-[#2d2d30] border-b border-[#3e3e42]">
         <div className="flex items-center gap-4">
@@ -292,43 +304,67 @@ export default function CodeEditorPageNew() {
           </Link>
           <span className="text-white font-medium">Code Editor</span>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <button
             onClick={handleRunCode}
             disabled={isRunning}
-            className="px-4 py-1.5 bg-green-600 hover:bg-green-700 rounded text-sm disabled:opacity-50"
+            className="px-3 py-1.5 bg-green-600 hover:bg-green-700 rounded text-sm disabled:opacity-50 flex items-center gap-2"
           >
             {isRunning ? '⏳ Running...' : '▶ Run'}
           </button>
 
+          <div className="h-6 w-px bg-gray-600 mx-2"></div>
+
           <button
-            onClick={handleFixCode}
-            disabled={isFixing || isRunning}
-            className="px-4 py-1.5 bg-red-600 hover:bg-red-700 rounded text-sm disabled:opacity-50 flex items-center gap-1"
+            onClick={() => setShowAIAgent(!showAIAgent)}
+            className={`px-3 py-1.5 rounded text-sm flex items-center gap-2 transition-all ${showAIAgent
+              ? 'bg-purple-600 text-white shadow-[0_0_15px_rgba(147,51,234,0.5)]'
+              : 'bg-purple-600/20 text-purple-300 hover:bg-purple-600/40'
+              }`}
           >
-            {isFixing ? '🔍 Analyzing...' : '🔧 Fix Code'}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            AI Assistant
           </button>
-          
+
+          <div className="h-6 w-px bg-gray-600 mx-2"></div>
+
+          <button
+            onClick={() => setShowConvertModal(true)}
+            className="px-3 py-1.5 bg-orange-600/20 hover:bg-orange-600/40 text-orange-300 rounded text-sm"
+          >
+            🔄 Convert
+          </button>
+
+          <button
+            onClick={() => editorRef.current?.getAction('editor.action.formatDocument').run()}
+            className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 rounded text-sm"
+            title="Format Code"
+          >
+            ✨ Format
+          </button>
+
           {activeFile?.language === 'html' && (
             <button
               onClick={() => setShowPreview(!showPreview)}
-              className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+              className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-700 rounded text-sm"
             >
               {showPreview ? '📝 Code' : '👁 Preview'}
             </button>
           )}
-          
+
           <button
             onClick={() => setModalOpen(true)}
-            className="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 rounded text-sm"
+            className="px-3 py-1.5 bg-slate-600 hover:bg-slate-700 rounded text-sm"
           >
-            + New File
+            + File
           </button>
         </div>
       </header>
 
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex min-h-0 relative">
         {/* Sidebar */}
         <aside className="w-60 bg-[#252526] border-r border-[#3e3e42] overflow-auto">
           <div className="p-2">
@@ -336,12 +372,16 @@ export default function CodeEditorPageNew() {
             {files.map(file => (
               <div
                 key={file.id}
-                className={`group flex items-center justify-between px-3 py-2 rounded cursor-pointer ${
-                  activeFileId === file.id ? 'bg-[#37373d]' : 'hover:bg-[#2a2d2e]'
-                }`}
+                className={`group flex items-center justify-between px-3 py-2 rounded cursor-pointer ${activeFileId === file.id ? 'bg-[#37373d]' : 'hover:bg-[#2a2d2e]'
+                  }`}
                 onClick={() => setActiveFileId(file.id)}
               >
-                <span className="text-sm truncate">{file.name}</span>
+                <div className="flex items-center gap-2 truncate">
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-[#1e1e1e] text-slate-400 font-mono">
+                    {file.language === 'javascript' ? 'JS' : file.language === 'python' ? 'PY' : file.language.toUpperCase().slice(0, 3)}
+                  </span>
+                  <span className="text-sm truncate">{file.name}</span>
+                </div>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -359,49 +399,67 @@ export default function CodeEditorPageNew() {
         </aside>
 
         {/* Main Area */}
-        <main className="flex-1 flex flex-col min-w-0">
-          {/* Editor/Preview */}
-          <div className="flex-1 min-h-0">
-            {showPreview && activeFile?.language === 'html' ? (
-              <iframe
-                srcDoc={activeFile.content}
-                className="w-full h-full bg-white"
-                title="Preview"
-                sandbox="allow-scripts"
-              />
-            ) : (
-              <div className={`h-full ${codeUpdated ? 'animate-pulse bg-green-900/20' : ''} transition-all duration-500`}>
-                <Editor
-                  height="100%"
-                  language={activeFile?.language || 'plaintext'}
-                  value={activeFile?.content || ''}
-                  onChange={handleEditorChange}
-                  theme="vs-dark"
-                  options={{
-                    minimap: { enabled: true },
-                    fontSize: 14,
-                    wordWrap: 'on',
-                    automaticLayout: true,
-                  }}
+        {/* Main Content Wrapper */}
+        <div className="flex-1 flex min-w-0">
+          {/* Main Editor Area */}
+          <main className="flex-1 flex flex-col min-w-0 min-h-0 relative">
+            {/* Editor/Preview */}
+            <div className="flex-1 min-h-0 relative">
+              {showPreview && activeFile?.language === 'html' ? (
+                <iframe
+                  srcDoc={activeFile.content}
+                  className="w-full h-full bg-white"
+                  title="Preview"
+                  sandbox="allow-scripts"
                 />
-              </div>
-            )}
-          </div>
-
-          {/* Terminal Output */}
-          <div className="h-48 bg-[#1a1a1a] border-t border-[#3e3e42] overflow-auto">
-            <div className="flex items-center px-4 py-2 bg-[#252526] border-b border-[#3e3e42]">
-              <span className="text-xs text-slate-400 font-semibold">TERMINAL</span>
-            </div>
-            <div className="p-4 font-mono text-sm text-green-400">
-              {output.map((line, i) => (
-                <div key={i} className={line.startsWith('#') ? 'text-slate-500 mb-2' : line.startsWith('$') ? 'text-blue-400' : line.startsWith('---') ? 'text-yellow-400 mt-2' : line.includes('Error') || line.includes('Failed') ? 'text-red-400' : 'text-green-400'}>
-                  {line}
+              ) : (
+                <div className={`h-full ${codeUpdated ? 'animate-pulse bg-green-900/10' : ''} transition-all duration-500`}>
+                  <Editor
+                    height="100%"
+                    language={activeFile?.language || 'plaintext'}
+                    value={activeFile?.content || ''}
+                    onChange={handleEditorChange}
+                    onMount={handleEditorDidMount}
+                    theme="vs-dark"
+                    options={{
+                      minimap: { enabled: true },
+                      fontSize: 14,
+                      wordWrap: 'on',
+                      automaticLayout: true,
+                      padding: { top: 16 }
+                    }}
+                  />
                 </div>
-              ))}
+              )}
             </div>
-          </div>
-        </main>
+
+            {/* Terminal Output */}
+            <div className="h-48 bg-[#1a1a1a] border-t border-[#3e3e42] overflow-auto">
+              <div className="flex items-center px-4 py-2 bg-[#252526] border-b border-[#3e3e42]">
+                <span className="text-xs text-slate-400 font-semibold">TERMINAL</span>
+              </div>
+              <div className="p-4 font-mono text-sm text-green-400">
+                {output.map((line, i) => (
+                  <div key={i} className={line.startsWith('#') ? 'text-slate-500 mb-2' : line.startsWith('$') ? 'text-blue-400' : line.startsWith('---') ? 'text-yellow-400 mt-2' : line.includes('Error') || line.includes('Failed') ? 'text-red-400' : 'text-green-400'}>
+                    {line}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </main>
+
+          {/* AI Agent Sidebar */}
+          {showAIAgent && (
+            <aside className="w-[450px] bg-[#1e1e1e] border-l border-[#3e3e42] flex flex-col z-20">
+              <AIChatWindow
+                onClose={() => setShowAIAgent(false)}
+                currentCode={activeFile?.content || ''}
+                language={activeFile?.language || 'plaintext'}
+                onCodeUpdate={handleUpdateCode}
+              />
+            </aside>
+          )}
+        </div>
       </div>
 
       {/* Create File Modal */}
@@ -442,6 +500,56 @@ export default function CodeEditorPageNew() {
             </form>
           </div>
         </Modal>
+      )}
+
+      {/* Convert Language Modal */}
+      {showConvertModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[#2d2d30] rounded-lg shadow-2xl max-w-md w-full mx-4 border border-[#3e3e42]">
+            <div className="p-6">
+              <h2 className="text-xl font-bold text-white mb-4">🔄 Convert Code</h2>
+              <p className="text-slate-400 text-sm mb-4">
+                Convert your {activeFile?.language} code to another programming language
+              </p>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Target Language
+                </label>
+                <select
+                  value={targetLanguage}
+                  onChange={(e) => setTargetLanguage(e.target.value)}
+                  className="w-full px-3 py-2 bg-[#1e1e1e] border border-[#3e3e42] rounded text-white focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                >
+                  <option value="javascript">JavaScript</option>
+                  <option value="python">Python</option>
+                  <option value="java">Java</option>
+                  <option value="cpp">C++</option>
+                  <option value="csharp">C#</option>
+                  <option value="go">Go</option>
+                  <option value="rust">Rust</option>
+                  <option value="php">PHP</option>
+                  <option value="typescript">TypeScript</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowConvertModal(false)}
+                  className="px-4 py-2 bg-slate-600 hover:bg-slate-700 rounded text-sm text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConvertCode}
+                  className="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded text-sm text-white"
+                >
+                  Convert Code
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

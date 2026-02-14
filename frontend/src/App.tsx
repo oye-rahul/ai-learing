@@ -15,7 +15,7 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
-import GoogleCallbackPage from './pages/GoogleCallbackPage';
+
 import DashboardPage from './pages/DashboardPage';
 import PlaygroundPage from './pages/PlaygroundPage';
 import LearningPage from './pages/LearningPage';
@@ -28,19 +28,37 @@ import BadgesPage from './pages/BadgesPage';
 import AssessmentPage from './pages/AssessmentPage';
 import SharePage from './pages/SharePage';
 import CodeEditorPage from './pages/CodeEditorPage';
+import TutorialsPage from './pages/TutorialsPage';
+import ExamsPage from './pages/ExamsPage';
 
 // Components
 import LoadingSpinner from './components/shared/LoadingSpinner';
 
+// Protected Route Component
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+
+  if (!isAuthenticated) {
+    return <Navigate to="/auth/login" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 function App() {
   const dispatch = useDispatch<AppDispatch>();
-  const { isAuthenticated, loading } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated, loading, token } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
-    dispatch(checkAuth());
+    // Only check auth if we have a token
+    const storedToken = localStorage.getItem('token');
+    if (storedToken) {
+      dispatch(checkAuth());
+    }
   }, [dispatch]);
 
-  if (loading) {
+  // Show loading only on initial auth check
+  if (loading && !token) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner size="lg" />
@@ -61,138 +79,136 @@ function App() {
           <Route path="signup" element={<SignupPage />} />
           <Route path="forgot-password" element={<ForgotPasswordPage />} />
           <Route path="reset-password" element={<ResetPasswordPage />} />
-          <Route path="google/callback" element={<GoogleCallbackPage />} />
+
         </Route>
 
         {/* Protected Routes */}
         <Route
           path="/dashboard"
           element={
-            isAuthenticated ? (
+            <ProtectedRoute>
               <AppLayout>
                 <DashboardPage />
               </AppLayout>
-            ) : (
-              <Navigate to="/auth/login" replace />
-            )
+            </ProtectedRoute>
           }
         />
         <Route
           path="/ai-learnixo"
           element={
-            isAuthenticated ? (
+            <ProtectedRoute>
               <AppLayout>
                 <AILearnixoPage />
               </AppLayout>
-            ) : (
-              <Navigate to="/auth/login" replace />
-            )
+            </ProtectedRoute>
           }
         />
         <Route
           path="/playground"
           element={
-            isAuthenticated ? (
+            <ProtectedRoute>
               <AppLayout>
                 <PlaygroundPage />
               </AppLayout>
-            ) : (
-              <Navigate to="/auth/login" replace />
-            )
+            </ProtectedRoute>
           }
         />
         <Route
           path="/code-editor"
           element={
-            isAuthenticated ? (
+            <ProtectedRoute>
               <CodeEditorPage />
-            ) : (
-              <Navigate to="/auth/login" replace />
-            )
+            </ProtectedRoute>
           }
         />
         <Route
           path="/learn"
           element={
-            isAuthenticated ? (
+            <ProtectedRoute>
               <AppLayout>
                 <LearningPage />
               </AppLayout>
-            ) : (
-              <Navigate to="/auth/login" replace />
-            )
+            </ProtectedRoute>
           }
         />
         <Route
           path="/projects"
           element={
-            isAuthenticated ? (
+            <ProtectedRoute>
               <AppLayout>
                 <ProjectsPage />
               </AppLayout>
-            ) : (
-              <Navigate to="/auth/login" replace />
-            )
+            </ProtectedRoute>
           }
         />
         <Route
           path="/analytics"
           element={
-            isAuthenticated ? (
+            <ProtectedRoute>
               <AppLayout>
                 <AnalyticsPage />
               </AppLayout>
-            ) : (
-              <Navigate to="/auth/login" replace />
-            )
+            </ProtectedRoute>
           }
         />
         <Route
           path="/settings"
           element={
-            isAuthenticated ? (
+            <ProtectedRoute>
               <AppLayout>
                 <SettingsPage />
               </AppLayout>
-            ) : (
-              <Navigate to="/auth/login" replace />
-            )
+            </ProtectedRoute>
           }
         />
         <Route
           path="/snippets"
           element={
-            isAuthenticated ? (
+            <ProtectedRoute>
               <AppLayout>
                 <SnippetsPage />
               </AppLayout>
-            ) : (
-              <Navigate to="/auth/login" replace />
-            )
+            </ProtectedRoute>
           }
         />
         <Route
           path="/badges"
           element={
-            isAuthenticated ? (
+            <ProtectedRoute>
               <AppLayout>
                 <BadgesPage />
               </AppLayout>
-            ) : (
-              <Navigate to="/auth/login" replace />
-            )
+            </ProtectedRoute>
           }
         />
         <Route
           path="/learn/assessment"
           element={
-            isAuthenticated ? (
+            <ProtectedRoute>
               <AppLayout>
                 <AssessmentPage />
               </AppLayout>
-            ) : (
-              <Navigate to="/auth/login" replace />
-            )
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tutorials"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <TutorialsPage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/exams"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <ExamsPage />
+              </AppLayout>
+            </ProtectedRoute>
           }
         />
 

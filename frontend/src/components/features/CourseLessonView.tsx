@@ -5,6 +5,8 @@ import Card from '../shared/Card';
 import Button from '../shared/Button';
 import { setChatOpen, setChatContext } from '../../store/slices/aiSlice';
 import { AppDispatch, RootState } from '../../store/store';
+import Modal from '../shared/Modal';
+import { aiAPI } from '../../services/api';
 import playgroundAPI from '../../services/playgroundApi';
 import { toast } from 'react-toastify';
 
@@ -57,6 +59,14 @@ const CourseLessonView: React.FC<CourseLessonViewProps> = ({
   const [showResources, setShowResources] = useState(false);
   const [showCodeEditor, setShowCodeEditor] = useState(false); // New state for editor visibility
 
+  // Quiz State
+  const [isQuizOpen, setIsQuizOpen] = useState(false);
+  const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
+  const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
+  const [userAnswers, setUserAnswers] = useState<Record<number, number>>({});
+  const [quizScore, setQuizScore] = useState<number | null>(null);
+  const [showQuizResult, setShowQuizResult] = useState(false);
+
   // Update code when lesson changes
   useEffect(() => {
     if (currentLesson?.codeExample) {
@@ -82,7 +92,7 @@ const CourseLessonView: React.FC<CourseLessonViewProps> = ({
     // Check for unsupported libraries
     const unsupportedLibraries = ['torch', 'tensorflow', 'keras', 'numpy', 'pandas', 'sklearn', 'scipy'];
     const codeLines = code.toLowerCase();
-    const foundUnsupported = unsupportedLibraries.find(lib => 
+    const foundUnsupported = unsupportedLibraries.find(lib =>
       codeLines.includes(`import ${lib}`) || codeLines.includes(`from ${lib}`)
     );
 
@@ -114,13 +124,13 @@ const CourseLessonView: React.FC<CourseLessonViewProps> = ({
       } else {
         const errorMsg = result.error || 'Unknown error';
         let helpfulMessage = errorMsg;
-        
+
         // Provide helpful messages for common errors
         if (errorMsg.includes('ModuleNotFoundError') || errorMsg.includes('No module named')) {
           const moduleName = errorMsg.match(/No module named '([^']+)'/)?.[1] || 'unknown';
           helpfulMessage = `>>> Module Not Found\n\nThe module '${moduleName}' is not available in the online compiler.\n\nOnline compiler limitations:\n- Only standard library modules are available\n- No external packages (pip install won't work)\n- No machine learning libraries (torch, tensorflow, etc.)\n\nOriginal error:\n${errorMsg}`;
         }
-        
+
         setOutput(`>>> Execution failed\n\n${helpfulMessage}`);
         toast.error('Code execution failed - check console output');
         console.error('Execution failed:', result);
@@ -132,13 +142,102 @@ const CourseLessonView: React.FC<CourseLessonViewProps> = ({
         response: error.response?.data,
         status: error.response?.status
       });
-      
+
       const errorMsg = error.response?.data?.error || error.response?.data?.message || error.message || 'Failed to execute code';
       setOutput(`>>> Error\n\n${errorMsg}\n\nPlease check:\n- Backend server is running on port 5000\n- Code syntax is correct\n- Only standard libraries are used (no pip packages)`);
       toast.error('Execution error: ' + errorMsg);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGenerateQuiz = async () => {
+    setIsGeneratingQuiz(true);
+    setIsQuizOpen(true);
+    setQuizQuestions([]);
+    setUserAnswers({});
+    setQuizScore(null);
+    setShowQuizResult(false);
+
+    try {
+      const prompt = `Create a short multiple-choice quiz (3 questions) based on this lesson content.
+      
+      Lesson Title: ${currentLesson?.title}
+      Description: ${currentLesson?.description}
+      Key Points: ${currentLesson?.keyPoints?.join(', ')}
+
+      Return ONLY a JSON array with this structure:
+      [
+        {
+          "question": "Question text",
+          "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
+          "correctIndex": 0 // 0-based index of correct option
+        }
+      ]
+      Do not include any other text or markdown formatting. just raw json.
+      `;
+
+      const response = await aiAPI.chatWithAI({
+        message: prompt,
+        code: '',
+        language: 'plaintext'
+      });
+
+      const responseText = response.data.response;
+      // Clean up markdown code blocks if present
+      const jsonString = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+
+      try {
+        const questions = JSON.parse(jsonString);
+        if (Array.isArray(questions)) {
+          setQuizQuestions(questions);
+        } else {
+          throw new Error('Invalid quiz format');
+        }
+      } catch (e) {
+        console.error('Failed to parse quiz JSON', e);
+        toast.error('AI failed to generate a valid quiz. Please try again.');
+        setIsQuizOpen(false);
+      }
+
+    } catch (error) {
+      console.error('Quiz generation error:', error);
+      toast.error('Failed to generate quiz');
+      setIsQuizOpen(false);
+    } finally {
+      setIsGeneratingQuiz(false);
+    }
+  };
+
+  const handleAnswerSelect = (questionIndex: number, optionIndex: number) => {
+    setUserAnswers(prev => ({
+      ...prev,
+      [questionIndex]: optionIndex
+    }));
+  };
+
+  const handleSubmitQuiz = () => {
+    let score = 0;
+    quizQuestions.forEach((q, index) => {
+      if (userAnswers[index] === q.correctIndex) {
+        score++;
+      }
+    });
+    setQuizScore(score);
+    setShowQuizResult(true);
+    if (score === quizQuestions.length) {
+      toast.success('Perfect score! 🎉');
+    } else {
+      toast.info(`You scored ${score} out of ${quizQuestions.length}`);
+    }
+  };
+
+  const handleCloseQuiz = () => {
+    setIsQuizOpen(false);
+    setQuizQuestions([]);
+    setUserAnswers({});
+    setQuizScore(null);
+    setShowQuizResult(false);
   };
 
   return (
@@ -228,6 +327,9 @@ const CourseLessonView: React.FC<CourseLessonViewProps> = ({
               </Button>
               <Button variant={isChatOpen ? "primary" : "secondary"} size="sm" onClick={() => dispatch(setChatOpen(!isChatOpen))}>
                 {isChatOpen ? "Close AI Tutor" : "Ask AI Tutor"}
+              </Button>
+              <Button variant="secondary" size="sm" onClick={handleGenerateQuiz} className="border border-indigo-500 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30">
+                ⚡ Take AI Quiz
               </Button>
             </div>
 
@@ -420,6 +522,123 @@ const CourseLessonView: React.FC<CourseLessonViewProps> = ({
           Next Lesson: {course.lessons?.[course.currentLesson]?.title || 'Complete'} →
         </Button>
       </footer>
+
+      {/* Quiz Modal */}
+      <Modal
+        isOpen={isQuizOpen}
+        onClose={() => !showQuizResult && setIsQuizOpen(false)}
+        title="AI Generated Quiz"
+        size="lg"
+      >
+        <div className="p-4">
+          {isGeneratingQuiz ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+              <p className="text-lg font-medium text-slate-700 dark:text-slate-300">Generating questions from lesson content...</p>
+              <p className="text-sm text-slate-500 mt-2">Our AI is analyzing the transcript and key points.</p>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              {!showQuizResult ? (
+                <>
+                  <div className="space-y-6">
+                    {quizQuestions.map((q, qIndex) => (
+                      <div key={qIndex} className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <h3 className="font-semibold text-lg mb-4 text-slate-900 dark:text-white">
+                          {qIndex + 1}. {q.question}
+                        </h3>
+                        <div className="space-y-3">
+                          {q.options.map((option: string, oIndex: number) => (
+                            <button
+                              key={oIndex}
+                              onClick={() => handleAnswerSelect(qIndex, oIndex)}
+                              className={`w-full text-left p-4 rounded-lg transition-all border ${userAnswers[qIndex] === oIndex
+                                  ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-500 ring-1 ring-indigo-500'
+                                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-indigo-300'
+                                }`}
+                            >
+                              <div className="flex items-center">
+                                <div className={`w-5 h-5 rounded-full border flex items-center justify-center mr-3 ${userAnswers[qIndex] === oIndex
+                                    ? 'border-indigo-600 bg-indigo-600 text-white'
+                                    : 'border-slate-400'
+                                  }`}>
+                                  {userAnswers[qIndex] === oIndex && (
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                  )}
+                                </div>
+                                <span className={userAnswers[qIndex] === oIndex ? 'text-indigo-900 dark:text-indigo-100 font-medium' : 'text-slate-700 dark:text-slate-300'}>
+                                  {option}
+                                </span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-end pt-4 border-t border-slate-200 dark:border-slate-700">
+                    <Button
+                      onClick={handleSubmitQuiz}
+                      disabled={Object.keys(userAnswers).length < quizQuestions.length}
+                      variant="primary"
+                      size="lg"
+                    >
+                      Submit Answers
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-8 animate-fade-in">
+                  <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-indigo-100 dark:bg-indigo-900/30 mb-6">
+                    <span className="text-4xl">
+                      {quizScore === quizQuestions.length ? '🏆' : quizScore && quizScore > quizQuestions.length / 2 ? '👏' : '📚'}
+                    </span>
+                  </div>
+                  <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+                    Quiz Complete!
+                  </h2>
+                  <p className="text-xl text-slate-600 dark:text-slate-400 mb-8">
+                    You scored <span className="font-bold text-indigo-600 dark:text-indigo-400">{quizScore}</span> out of {quizQuestions.length}
+                  </p>
+
+                  {/* Review Answers */}
+                  <div className="text-left max-w-2xl mx-auto space-y-4 mb-8">
+                    {quizQuestions.map((q, index) => (
+                      <div key={index} className={`p-4 rounded-lg border ${userAnswers[index] === q.correctIndex
+                          ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800'
+                          : 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800'
+                        }`}>
+                        <p className="font-medium mb-2">{q.question}</p>
+                        <p className="text-sm">
+                          Your answer: <span className={userAnswers[index] === q.correctIndex ? 'text-green-600 font-bold' : 'text-red-600 font-bold'}>
+                            {q.options[userAnswers[index]]}
+                          </span>
+                        </p>
+                        {userAnswers[index] !== q.correctIndex && (
+                          <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                            Correct answer: <span className="font-bold">{q.options[q.correctIndex]}</span>
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex justify-center space-x-4">
+                    <Button variant="secondary" onClick={handleCloseQuiz}>
+                      Close
+                    </Button>
+                    <Button variant="primary" onClick={handleGenerateQuiz}>
+                      Try Another Quiz
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 };

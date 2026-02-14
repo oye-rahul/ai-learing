@@ -12,6 +12,7 @@ interface AIChatWindowProps {
   currentCode: string;
   language: string;
   onCodeUpdate: (code: string) => void;
+  variant?: 'floating' | 'sidebar';
 }
 
 interface ChatMessage {
@@ -28,6 +29,7 @@ const AIChatWindow: React.FC<AIChatWindowProps> = ({
   currentCode,
   language,
   onCodeUpdate,
+  variant = 'floating',
 }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { chatMessages, loading, isTyping } = useSelector((state: RootState) => state.ai);
@@ -83,12 +85,36 @@ What would you like to work on today?`,
     setInputMessage('');
 
     try {
-      await dispatch(chatWithAI({
+      const result: any = await dispatch(chatWithAI({
         message: inputMessage,
         code: currentCode,
         language,
         conversationHistory: chatMessages.slice(-10), // Last 10 messages for context
       })).unwrap();
+
+      // Check for code blocks in the response and auto-apply
+      if (result && result.response) {
+        // Extract code block - Regex matches ```language (optional) [content] ```
+        const codeBlockRegex = /```(?:\w+)?\s*([\s\S]*?)```/;
+        const match = result.response.match(codeBlockRegex);
+
+        if (match && match[1]) {
+          const extractedCode = match[1].trim();
+
+          // Auto-apply the code to the editor
+          insertCodeIntoEditor(extractedCode);
+
+          // Add a system note that code was applied
+          // verify we don't duplicate messages too fast?
+          dispatch(addChatMessage({
+            id: Date.now().toString() + '-system',
+            role: 'assistant',
+            content: '✅ Code auto-applied to editor.',
+            timestamp: new Date().toISOString()
+          }));
+        }
+      }
+
     } catch (error) {
       const errorMessage: ChatMessage = {
         id: Date.now().toString(),
@@ -142,11 +168,11 @@ What would you like to work on today?`,
     navigator.clipboard.writeText(text);
   };
 
-  const insertCodeIntoEditor = (code: string) => {
-    onCodeUpdate(code);
+  const insertCodeIntoEditor = (codeSnippet: string) => {
+    onCodeUpdate(codeSnippet);
   };
 
-  if (isMinimized) {
+  if (isMinimized && variant !== 'sidebar') {
     return (
       <div className="fixed bottom-6 right-6 z-50">
         <Button
@@ -161,8 +187,12 @@ What would you like to work on today?`,
     );
   }
 
+  const containerClasses = variant === 'sidebar'
+    ? "h-full flex flex-col w-full bg-[#1e1e1e] border-l border-[#3e3e42]"
+    : "h-full flex flex-col max-w-md mx-auto bg-white dark:bg-[#1e1e1e] rounded-xl shadow-xl overflow-hidden border border-slate-200 dark:border-[#3e3e42]";
+
   return (
-    <Card className="h-full flex flex-col max-w-md mx-auto">
+    <div className={containerClasses}>
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
         <div className="flex items-center space-x-2">
@@ -216,8 +246,8 @@ What would you like to work on today?`,
           >
             <div
               className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${message.role === 'user'
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100'
+                ? 'bg-primary-600 text-white'
+                : 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100'
                 }`}
             >
               <div className="whitespace-pre-wrap text-sm">{message.content}</div>
@@ -247,7 +277,7 @@ What would you like to work on today?`,
                               <button
                                 onClick={() => insertCodeIntoEditor(code)}
                                 className="text-slate-400 hover:text-white p-1"
-                                title="Insert into editor"
+                                title="Insert into editor (Auto-Applied)"
                               >
                                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -265,8 +295,8 @@ What would you like to work on today?`,
               )}
 
               <p className={`text-xs mt-1 ${message.role === 'user'
-                  ? 'text-primary-100'
-                  : 'text-slate-500 dark:text-slate-400'
+                ? 'text-primary-100'
+                : 'text-slate-500 dark:text-slate-400'
                 }`}>
                 {formatTimestamp(message.timestamp)}
               </p>
@@ -325,7 +355,7 @@ What would you like to work on today?`,
           </Button>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
 

@@ -11,13 +11,31 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token and custom API key
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Add custom OpenAI API key if available
+    try {
+      const openaiKey = localStorage.getItem('openai_api_key');
+      if (openaiKey) {
+        config.headers['X-OpenAI-Key'] = openaiKey;
+      }
+
+      const geminiKey = localStorage.getItem('gemini_api_key');
+      if (geminiKey) {
+        config.headers['X-Gemini-Key'] = geminiKey;
+        console.log('✅ Added Gemini API key to request');
+      }
+    } catch (error) {
+      console.error('❌ Error accessing localStorage (tracking prevention?):', error);
+      console.warn('⚠️ Using backend default API key instead');
+    }
+
     return config;
   },
   (error) => {
