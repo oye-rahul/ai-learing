@@ -47,7 +47,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 function App() {
   const dispatch = useDispatch<AppDispatch>();
-  const { isAuthenticated, loading, token } = useSelector((state: RootState) => state.auth);
+  const { loading, token } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     // Only check auth if we have a token

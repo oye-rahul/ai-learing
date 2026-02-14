@@ -71,13 +71,10 @@ export default function CodeEditorPageNew() {
   const [activeFileId, setActiveFileId] = useState('index.html');
   const [output, setOutput] = useState<string[]>(['# Terminal', '$ Ready to execute code...']);
   const [isRunning, setIsRunning] = useState(false);
+  const [isConverting, setIsConverting] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [isFixing, setIsFixing] = useState(false);
   const [codeUpdated, setCodeUpdated] = useState(false);
-  const [isExplaining, setIsExplaining] = useState(false);
-  const [isOptimizing, setIsOptimizing] = useState(false);
-  const [isConverting, setIsConverting] = useState(false);
   const [showConvertModal, setShowConvertModal] = useState(false);
   const [targetLanguage, setTargetLanguage] = useState('python');
 
@@ -227,16 +224,6 @@ export default function CodeEditorPageNew() {
     }
   }, [activeFileId, files]);
 
-  // Specific AI Actions (Legacy / Button based)
-  const handleFixCode = useCallback(async () => {
-    if (!activeFile) return;
-    setIsFixing(true);
-    // Open AI Agent for a better experience
-    setShowAIAgent(true);
-    // You could pre-populate the chat here if desired, but letting the user type might be better
-    setIsFixing(false);
-  }, [activeFile]);
-
   const handleConvertCode = useCallback(async () => {
     if (!activeFile) return;
 
@@ -292,7 +279,7 @@ export default function CodeEditorPageNew() {
     } finally {
       setIsConverting(false);
     }
-  }, [activeFile, activeFileId, targetLanguage]);
+  }, [activeFile, targetLanguage, setIsConverting]);
 
   return (
     <div className="h-screen flex flex-col bg-[#1e1e1e] text-white relative">
@@ -333,9 +320,10 @@ export default function CodeEditorPageNew() {
 
           <button
             onClick={() => setShowConvertModal(true)}
-            className="px-3 py-1.5 bg-orange-600/20 hover:bg-orange-600/40 text-orange-300 rounded text-sm"
+            disabled={isConverting}
+            className="px-3 py-1.5 bg-orange-600/20 hover:bg-orange-600/40 text-orange-300 rounded text-sm disabled:opacity-50"
           >
-            🔄 Convert
+            {isConverting ? '⏳ Converting...' : '🔄 Convert'}
           </button>
 
           <button

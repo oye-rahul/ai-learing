@@ -11,7 +11,7 @@ import { toast } from 'react-toastify';
 const LoginPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { loading, error, isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  const { loading, error } = useSelector((state: RootState) => state.auth);
 
   const [formData, setFormData] = useState({
     email: '',

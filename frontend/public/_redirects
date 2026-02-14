@@ -1,0 +1,2 @@
+/api/*  https://ai-learing-n9mb.vercel.app/api/:splat  200!
+/*      /index.html                                   200

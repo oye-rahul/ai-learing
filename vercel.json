@@ -9,31 +9,29 @@
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "frontend/build"
+        "distDir": "build"
       }
+    },
+    {
+      "src": "api/index.js",
+      "use": "@vercel/node"
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "backend/server.js"
+      "source": "/api/(.*)",
+      "destination": "api/index.js"
     },
     {
-      "src": "/health",
-      "dest": "backend/server.js"
+      "source": "/health",
+      "destination": "api/index.js"
     },
     {
-      "src": "/(.*)",
-      "dest": "frontend/build/$1"
+      "source": "/(.*)",
+      "destination": "frontend/package.json"
     }
   ],
   "env": {
     "NODE_ENV": "production"
-  },
-  "functions": {
-    "backend/server.js": {
-      "memory": 1024,
-      "maxDuration": 10
-    }
   }
 }

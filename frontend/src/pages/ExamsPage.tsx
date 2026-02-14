@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import Button from '../components/shared/Button';
 import Card from '../components/shared/Card';
-import ProgressBar from '../components/shared/ProgressBar';
 
 interface Exam {
     id: string;
@@ -58,6 +57,17 @@ const ExamsPage: React.FC = () => {
     const filteredExams = filter === 'All' ? EXAMS : EXAMS.filter(exam => exam.category === filter);
     const categories = ['All', ...Array.from(new Set(EXAMS.map(e => e.category)))];
 
+    const handleSubmitExam = () => {
+        let calculatedScore = 0;
+        HTML_QUESTIONS.forEach((q, index) => {
+            if (userAnswers[index] === q.correct) {
+                calculatedScore++;
+            }
+        });
+        setScore(calculatedScore);
+        setExamStatus('completed');
+    };
+
     useEffect(() => {
         let timer: NodeJS.Timeout;
         if (examStatus === 'running' && timeLeft > 0) {
@@ -109,17 +119,6 @@ const ExamsPage: React.FC = () => {
         if (currentQuestionIndex > 0) {
             setCurrentQuestionIndex(prev => prev - 1);
         }
-    };
-
-    const handleSubmitExam = () => {
-        let calculatedScore = 0;
-        HTML_QUESTIONS.forEach((q, index) => {
-            if (userAnswers[index] === q.correct) {
-                calculatedScore++;
-            }
-        });
-        setScore(calculatedScore);
-        setExamStatus('completed');
     };
 
     const handleExitExam = () => {

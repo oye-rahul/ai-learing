@@ -4,7 +4,6 @@ import { RootState } from '../../store/store';
 import { chatWithAI, addChatMessage, clearChatMessages } from '../../store/slices/aiSlice';
 import { AppDispatch } from '../../store/store';
 import Button from '../shared/Button';
-import Card from '../shared/Card';
 import LoadingSpinner from '../shared/LoadingSpinner';
 
 interface AIChatWindowProps {

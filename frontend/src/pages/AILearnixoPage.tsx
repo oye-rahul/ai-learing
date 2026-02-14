@@ -1,8 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '../store/store';
 import { aiAPI } from '../services/api';
-import Card from '../components/shared/Card';
 import Button from '../components/shared/Button';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 
@@ -81,7 +78,7 @@ const formatAIResponse = (content: string) => {
     // List items (bullet or numbered)
     else if (line.trim().startsWith('*') || line.trim().startsWith('-') || line.trim().startsWith('•') || /^\d+\.\s/.test(line.trim())) {
       const isNumbered = /^\d+\.\s/.test(line.trim());
-      const content = isNumbered ? line.replace(/^\d+\.\s/, '') : line.replace(/^[\*\-•]\s*/, '');
+      const content = isNumbered ? line.replace(/^\d+\.\s/, '') : line.replace(/^[*\-•]\s*/, '');
       const number = isNumbered ? line.match(/^(\d+)/)?.[1] : null;
 
       formatted.push(
@@ -185,7 +182,6 @@ const AILearnixoPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFallbackMode, setIsFallbackMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { user } = useSelector((state: RootState) => state.auth);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
