@@ -57,7 +57,7 @@ const ExamsPage: React.FC = () => {
     const filteredExams = filter === 'All' ? EXAMS : EXAMS.filter(exam => exam.category === filter);
     const categories = ['All', ...Array.from(new Set(EXAMS.map(e => e.category)))];
 
-    const handleSubmitExam = () => {
+    const handleSubmitExam = React.useCallback(() => {
         let calculatedScore = 0;
         HTML_QUESTIONS.forEach((q, index) => {
             if (userAnswers[index] === q.correct) {
@@ -66,7 +66,7 @@ const ExamsPage: React.FC = () => {
         });
         setScore(calculatedScore);
         setExamStatus('completed');
-    };
+    }, [userAnswers]);
 
     useEffect(() => {
         let timer: NodeJS.Timeout;
@@ -82,7 +82,7 @@ const ExamsPage: React.FC = () => {
             }, 1000);
         }
         return () => clearInterval(timer);
-    }, [examStatus, timeLeft]);
+    }, [examStatus, timeLeft, handleSubmitExam]);
 
     const handleStartExam = (exam: Exam) => {
         if (exam.id !== 'html-basic') {
@@ -172,8 +172,8 @@ const ExamsPage: React.FC = () => {
                                     <label
                                         key={index}
                                         className={`flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${userAnswers[currentQuestionIndex] === index
-                                                ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20'
-                                                : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700'
+                                            ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20'
+                                            : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700'
                                             }`}
                                     >
                                         <input
