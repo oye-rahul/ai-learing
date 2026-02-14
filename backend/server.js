@@ -157,5 +157,5 @@ if (!process.env.VERCEL) {
   });
 }
 
-module.exports = app;
+// Export for Vercel serverless
 module.exports = app;
