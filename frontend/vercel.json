@@ -6,8 +6,8 @@
   "framework": "create-react-app",
   "rewrites": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "source": "/api/:path*",
+      "destination": "https://your-backend-url.vercel.app/api/:path*"
     }
   ]
 }
