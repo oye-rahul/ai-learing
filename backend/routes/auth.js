@@ -26,6 +26,15 @@ router.post('/register', [
 
     const { email, username, password, role } = req.body;
 
+    // Safety check for JWT_SECRET
+    if (!process.env.JWT_SECRET) {
+      console.error('❌ CRITICAL: JWT_SECRET is missing from environment');
+      return res.status(500).json({
+        error: 'Configuration Error',
+        message: 'JWT_SECRET is not configured on the server. Please add it to your environment variables.'
+      });
+    }
+
     // Check if user already exists
     const existingUser = await query(
       'SELECT id FROM users WHERE email = ? OR username = ?',
@@ -85,8 +94,9 @@ router.post('/register', [
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to create user',
+      error: 'Registration failed',
+      message: error.message || 'An unexpected error occurred during registration',
+      stack: process.env.NODE_ENV !== 'production' ? error.stack : undefined
     });
   }
 });
@@ -156,8 +166,8 @@ router.post('/login', [
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({
-      error: 'Internal server error',
-      message: 'Login failed',
+      error: 'Login failed',
+      message: error.message || 'An unexpected error occurred during login'
     });
   }
 });
