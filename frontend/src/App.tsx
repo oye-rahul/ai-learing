@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from './store/store';
 import { checkAuth } from './store/slices/authSlice';
 import { AppDispatch } from './store/store';
+import { Analytics } from '@vercel/analytics/react';
 
 // Layouts
 import AuthLayout from './components/layouts/AuthLayout';
@@ -68,6 +69,7 @@ function App() {
 
   return (
     <div className="App">
+      <Analytics />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
