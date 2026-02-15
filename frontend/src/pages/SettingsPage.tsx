@@ -256,7 +256,7 @@ const SettingsPage: React.FC = () => {
               </svg>
             }
           />
-          
+
           {apiSettings.gemini_key && (
             <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
               <p className="text-sm text-green-700 dark:text-green-300 flex items-center">
@@ -270,8 +270,8 @@ const SettingsPage: React.FC = () => {
 
           <div className="flex justify-between items-center">
             <div className="flex gap-2">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="sm"
                 onClick={() => {
                   localStorage.removeItem('gemini_api_key');
@@ -281,8 +281,8 @@ const SettingsPage: React.FC = () => {
               >
                 Clear API Key
               </Button>
-              <Button 
-                variant="secondary" 
+              <Button
+                variant="secondary"
                 size="sm"
                 onClick={() => {
                   const key = localStorage.getItem('gemini_api_key');
@@ -296,21 +296,22 @@ const SettingsPage: React.FC = () => {
                 Check Current Key
               </Button>
             </div>
-            <Button 
+            <Button
               variant="primary"
               onClick={async () => {
                 if (!apiSettings.gemini_key) {
                   toast.error('Please enter an API key');
                   return;
                 }
-                
+
                 // Save to localStorage first
                 localStorage.setItem('gemini_api_key', apiSettings.gemini_key);
                 toast.success('✅ API Key saved! Testing...');
-                
+
                 // Test the API key (optional - don't block on failure)
                 try {
-                  const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/ai/test-key`, {
+                  const API_BASE = process.env.REACT_APP_API_URL || '/api';
+                  const response = await fetch(`${API_BASE}/ai/test-key`, {
                     method: 'POST',
                     headers: {
                       'Content-Type': 'application/json',
@@ -318,9 +319,9 @@ const SettingsPage: React.FC = () => {
                       'X-Gemini-Key': apiSettings.gemini_key
                     }
                   });
-                  
+
                   const data = await response.json();
-                  
+
                   if (response.ok && data.success) {
                     toast.success('✅ API Key verified and working!', { autoClose: 3000 });
                   } else {
