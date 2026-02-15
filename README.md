@@ -1,10 +1,14 @@
 # FlowState - AI-Powered Developer Learning Platform
 
-🚀 **Live Demo**: [Deploy on Vercel](https://vercel.com) | **GitHub**: https://github.com/oye-rahul/ai-learing
+🚀 **Live Demo**:https://ai-learing-bharat.vercel.app/ **GitHub**: https://github.com/oye-rahul/ai-learing
 
 FlowState is a comprehensive learning platform that combines AI assistance with interactive coding to help developers learn faster and build better projects. The platform features personalized learning paths, real-time AI code assistance, project collaboration, and detailed analytics.
 
 ## 🚀 Features
+<img width="1919" height="1079" alt="Screenshot 2026-02-15 171818" src="https://github.com/user-attachments/assets/41dae2e6-21ee-43e8-8cf3-ed6949d773f1" />
+
+<img width="1913" height="976" alt="Screenshot 2026-02-14 230846" src="https://github.com/user-attachments/assets/84b7adb4-263a-4d21-9b0b-035009275a63" />
+
 
 ### Core Features
 - **AI-Powered Learning**: Get personalized explanations, code optimization, and debugging assistance
@@ -273,31 +277,6 @@ This project is licensed under the MIT License.
 - Monaco Editor for code editing
 - Tailwind CSS for styling
 - React and Node.js communities
-
-## 🗺 Roadmap
-
-### Phase 1 (Current) ✅
-- ✅ Core learning platform
-- ✅ AI-powered code assistance with agentic fixing
-- ✅ Project management
-- ✅ Analytics dashboard
-- ✅ Multi-language code execution
-- ✅ Google OAuth integration
-- ✅ Vercel/Netlify deployment ready
-
-### Phase 2 (Planned)
-- [ ] Mobile app (React Native)
-- [ ] VS Code extension
-- [ ] Real-time collaboration
-- [ ] Advanced AI features
-- [ ] Community features
-- [ ] More OAuth providers
-
-### Phase 3 (Future)
-- [ ] Marketplace for learning content
-- [ ] Enterprise features
-- [ ] Advanced analytics
-- [ ] Integration with popular dev tools
 
 ---
 
