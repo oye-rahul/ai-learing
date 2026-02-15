@@ -29,7 +29,8 @@ export const login = createAsyncThunk(
   'auth/login',
   async (credentials: { email: string; password: string }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/auth/login`, {
+      const API_BASE = process.env.REACT_APP_API_URL || '/api';
+      const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -59,14 +60,15 @@ export const login = createAsyncThunk(
 
 export const register = createAsyncThunk(
   'auth/register',
-  async (userData: { 
-    email: string; 
-    password: string; 
-    username: string; 
-    role: 'beginner' | 'intermediate' | 'expert' 
+  async (userData: {
+    email: string;
+    password: string;
+    username: string;
+    role: 'beginner' | 'intermediate' | 'expert'
   }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/auth/register`, {
+      const API_BASE = process.env.REACT_APP_API_URL || '/api';
+      const response = await fetch(`${API_BASE}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -100,11 +102,11 @@ export const checkAuth = createAsyncThunk(
     try {
       const token = localStorage.getItem('token');
       const userStr = localStorage.getItem('user');
-      
+
       if (!token || !userStr) {
         throw new Error('No token found');
       }
-      
+
       const user = JSON.parse(userStr);
       return { user, token };
     } catch (error: any) {

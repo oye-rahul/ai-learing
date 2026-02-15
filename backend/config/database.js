@@ -2,14 +2,21 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
 // Create SQLite database
-const dbPath = path.join(__dirname, '../database.sqlite');
+// On Vercel or in production environments with read-only filesystems, 
+// we use the /tmp directory which is writable.
+const isVercel = process.env.VERCEL || process.env.NODE_ENV === 'production';
+const dbPath = isVercel
+  ? path.join('/tmp', 'database.sqlite')
+  : path.join(__dirname, '../database.sqlite');
+
+console.log(`🗄️ Database Path: ${dbPath}`);
 const db = new sqlite3.Database(dbPath);
 
 // Helper function to execute queries
 const query = async (text, params = []) => {
   return new Promise((resolve, reject) => {
     const isSelect = text.trim().toLowerCase().startsWith('select');
-    
+
     if (isSelect) {
       db.all(text, params, (err, rows) => {
         if (err) {
@@ -21,7 +28,7 @@ const query = async (text, params = []) => {
         }
       });
     } else {
-      db.run(text, params, function(err) {
+      db.run(text, params, function (err) {
         if (err) {
           console.error('❌ Query error:', err);
           reject(err);
@@ -43,7 +50,7 @@ const getClient = async () => {
 const initializeDatabase = async () => {
   try {
     console.log('🗄️ Initializing SQLite database...');
-    
+
     // Users table
     await query(`
       CREATE TABLE IF NOT EXISTS users (
