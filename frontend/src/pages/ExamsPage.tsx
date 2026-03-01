@@ -14,12 +14,15 @@ interface Exam {
 
 const EXAMS: Exam[] = [
     { id: 'html-basic', title: 'HTML Basic', category: 'HTML', duration: '30 mins', questions: 20, difficulty: 'Beginner' },
-    { id: 'css-basic', title: 'CSS Fundamentals', category: 'CSS', duration: '45 mins', questions: 25, difficulty: 'Intermediate' },
-    { id: 'js-basic', title: 'JavaScript Essentials', category: 'JavaScript', duration: '60 mins', questions: 30, difficulty: 'Intermediate' },
+    { id: 'css-basic', title: 'CSS Fundamentals', category: 'CSS', duration: '20 mins', questions: 10, difficulty: 'Intermediate' },
+    { id: 'js-basic', title: 'JavaScript Essentials', category: 'JavaScript', duration: '30 mins', questions: 10, difficulty: 'Intermediate' },
     { id: 'python-intro', title: 'Python Introduction', category: 'Python', duration: '40 mins', questions: 20, difficulty: 'Beginner' },
     { id: 'react-advanced', title: 'React Advanced patterns', category: 'React', duration: '90 mins', questions: 40, difficulty: 'Advanced' },
     { id: 'sql-mastery', title: 'SQL Mastery', category: 'SQL', duration: '60 mins', questions: 30, difficulty: 'Advanced' },
 ];
+
+// Define which exams are unlocked
+const UNLOCKED_EXAMS = ['html-basic', 'css-basic', 'js-basic'];
 
 // Mock Questions for HTML Basic
 const HTML_QUESTIONS = [
@@ -45,6 +48,32 @@ const HTML_QUESTIONS = [
     { id: 20, text: "In HTML, text inputs are of type...", options: ["text", "input", "string", "txt"], correct: 0 },
 ];
 
+const CSS_QUESTIONS = [
+    { id: 1, text: "What does CSS stand for?", options: ["Creative Style Sheets", "Cascading Style Sheets", "Computer Style Sheets", "Colorful Style Sheets"], correct: 1 },
+    { id: 2, text: "Which HTML attribute is used to define inline styles?", options: ["class", "font", "style", "styles"], correct: 2 },
+    { id: 3, text: "Which is the correct CSS syntax?", options: ["{body;color:black;}", "body:color=black;", "body {color: black;}", "{body:color=black;}"], correct: 2 },
+    { id: 4, text: "How do you insert a comment in a CSS file?", options: ["// this is a comment //", "/* this is a comment */", "' this is a comment", "// this is a comment"], correct: 1 },
+    { id: 5, text: "Which property is used to change the background color?", options: ["color", "bgcolor", "background-color", "cellspacing"], correct: 2 },
+    { id: 6, text: "How do you add a background color for all <h1> elements?", options: ["h1.all {background-color:#FFFFFF;}", "h1 {background-color:#FFFFFF;}", "all.h1 {background-color:#FFFFFF;}", "h1 {bg-color:#FFFFFF;}"], correct: 1 },
+    { id: 7, text: "Which CSS property is used to change the text color of an element?", options: ["fgcolor", "color", "text-color", "font-color"], correct: 1 },
+    { id: 8, text: "Which CSS property controls the text size?", options: ["font-style", "text-size", "font-size", "text-style"], correct: 2 },
+    { id: 9, text: "What is the correct CSS syntax for making all the <p> elements bold?", options: ["p {font-weight:bold;}", "p {text-size:bold;}", "<p style='text-size:bold;'>", "p {font:bold;}"], correct: 0 },
+    { id: 10, text: "How do you display hyperlinks without an underline?", options: ["a {text-decoration:none;}", "a {text-underline:none;}", "a {decoration:no-underline;}", "a {underline:none;}"], correct: 0 },
+];
+
+const JS_QUESTIONS = [
+    { id: 1, text: "Inside which HTML element do we put the JavaScript?", options: ["<javascript>", "<scripting>", "<script>", "<js>"], correct: 2 },
+    { id: 2, text: "What is the correct JavaScript syntax to change the content of <p id='demo'>?", options: ["document.getElementById('demo').innerHTML = 'Hello World!';", "document.getElement('p').innerHTML = 'Hello World!';", "#demo.innerHTML = 'Hello World!';", "document.getElementByName('p').innerHTML = 'Hello World!';"], correct: 0 },
+    { id: 3, text: "Where is the correct place to insert a JavaScript?", options: ["The <head> section", "The <body> section", "Both the <head> and <body> section", "The <footer> section"], correct: 2 },
+    { id: 4, text: "What is the correct syntax for referring to an external script 'xxx.js'?", options: ["<script name='xxx.js'>", "<script src='xxx.js'>", "<script href='xxx.js'>", "<script link='xxx.js'>"], correct: 1 },
+    { id: 5, text: "How do you write 'Hello World' in an alert box?", options: ["alertBox('Hello World');", "msg('Hello World');", "msgBox('Hello World');", "alert('Hello World');"], correct: 3 },
+    { id: 6, text: "How do you create a function in JavaScript?", options: ["function myFunction()", "function:myFunction()", "function = myFunction()", "def myFunction()"], correct: 0 },
+    { id: 7, text: "How do you call a function named 'myFunction'?", options: ["call myFunction()", "myFunction()", "call function myFunction()", "run myFunction()"], correct: 1 },
+    { id: 8, text: "How to write an IF statement in JavaScript?", options: ["if i = 5 then", "if i == 5 then", "if (i == 5)", "if i = 5"], correct: 2 },
+    { id: 9, text: "How does a FOR loop start?", options: ["for (i <= 5; i++)", "for (i = 0; i <= 5; i++)", "for i = 1 to 5", "for (i = 0; i <= 5)"], correct: 1 },
+    { id: 10, text: "How can you add a comment in a JavaScript?", options: ["'This is a comment", "<!--This is a comment-->", "//This is a comment", "*This is a comment*"], correct: 2 },
+];
+
 const ExamsPage: React.FC = () => {
     const [filter, setFilter] = useState('All');
     const [activeExam, setActiveExam] = useState<Exam | null>(null);
@@ -57,16 +86,29 @@ const ExamsPage: React.FC = () => {
     const filteredExams = filter === 'All' ? EXAMS : EXAMS.filter(exam => exam.category === filter);
     const categories = ['All', ...Array.from(new Set(EXAMS.map(e => e.category)))];
 
+    const getQuestions = (examId: string) => {
+        switch (examId) {
+            case 'html-basic': return HTML_QUESTIONS;
+            case 'css-basic': return CSS_QUESTIONS;
+            case 'js-basic': return JS_QUESTIONS;
+            default: return HTML_QUESTIONS;
+        }
+    };
+
+    const currentQuestions = activeExam ? getQuestions(activeExam.id) : [];
+
     const handleSubmitExam = React.useCallback(() => {
+        if (!activeExam) return;
+        const questions = getQuestions(activeExam.id);
         let calculatedScore = 0;
-        HTML_QUESTIONS.forEach((q, index) => {
+        questions.forEach((q, index) => {
             if (userAnswers[index] === q.correct) {
                 calculatedScore++;
             }
         });
         setScore(calculatedScore);
         setExamStatus('completed');
-    }, [userAnswers]);
+    }, [userAnswers, activeExam]);
 
     useEffect(() => {
         let timer: NodeJS.Timeout;
@@ -85,8 +127,17 @@ const ExamsPage: React.FC = () => {
     }, [examStatus, timeLeft, handleSubmitExam]);
 
     const handleStartExam = (exam: Exam) => {
-        if (exam.id !== 'html-basic') {
-            toast.info(`Only 'HTML Basic' exam is available in this demo.`);
+        // Check if exam is locked
+        if (!UNLOCKED_EXAMS.includes(exam.id)) {
+            toast.warning(`🔒 ${exam.title} exam is locked! Complete HTML and CSS basics first to unlock more exams.`, {
+                position: 'top-center',
+                autoClose: 3000,
+            });
+            return;
+        }
+
+        if (exam.id !== 'html-basic' && exam.id !== 'css-basic' && exam.id !== 'js-basic') {
+            toast.info(`Only 'HTML', 'CSS', and 'JS' exams are available in this demo.`);
             return;
         }
         setActiveExam(exam);
@@ -110,7 +161,7 @@ const ExamsPage: React.FC = () => {
     };
 
     const handleNextQuestion = () => {
-        if (currentQuestionIndex < HTML_QUESTIONS.length - 1) {
+        if (currentQuestionIndex < currentQuestions.length - 1) {
             setCurrentQuestionIndex(prev => prev + 1);
         }
     };
@@ -136,8 +187,8 @@ const ExamsPage: React.FC = () => {
 
     // --- Active Exam View ---
     if (examStatus === 'running' && activeExam) {
-        const question = HTML_QUESTIONS[currentQuestionIndex];
-        const progress = ((currentQuestionIndex + 1) / HTML_QUESTIONS.length) * 100;
+        const question = currentQuestions[currentQuestionIndex];
+        const progress = ((currentQuestionIndex + 1) / currentQuestions.length) * 100;
 
         return (
             <div className="min-h-screen bg-slate-50 dark:bg-slate-900 absolute inset-0 z-50 flex flex-col">
@@ -145,7 +196,7 @@ const ExamsPage: React.FC = () => {
                 <header className="bg-white dark:bg-slate-800 shadow px-6 py-4 flex justify-between items-center">
                     <div>
                         <h2 className="text-xl font-bold text-slate-800 dark:text-white">{activeExam.title}</h2>
-                        <span className="text-sm text-slate-500">Question {currentQuestionIndex + 1} of {HTML_QUESTIONS.length}</span>
+                        <span className="text-sm text-slate-500">Question {currentQuestionIndex + 1} of {currentQuestions.length}</span>
                     </div>
                     <div className="flex items-center space-x-6">
                         <div className={`text-xl font-mono font-bold ${timeLeft < 300 ? 'text-red-500 animate-pulse' : 'text-slate-700 dark:text-slate-300'}`}>
@@ -198,7 +249,7 @@ const ExamsPage: React.FC = () => {
                                 Previous
                             </Button>
 
-                            {currentQuestionIndex === HTML_QUESTIONS.length - 1 ? (
+                            {currentQuestionIndex === currentQuestions.length - 1 ? (
                                 <Button
                                     variant="primary"
                                     onClick={handleSubmitExam}
@@ -223,7 +274,7 @@ const ExamsPage: React.FC = () => {
 
     // --- Results View ---
     if (examStatus === 'completed' && activeExam) {
-        const percentage = Math.round((score / HTML_QUESTIONS.length) * 100);
+        const percentage = Math.round((score / currentQuestions.length) * 100);
         const passed = percentage >= 70;
 
         return (
@@ -250,7 +301,7 @@ const ExamsPage: React.FC = () => {
 
                     <div className="grid grid-cols-3 gap-6 mb-8 max-w-md mx-auto">
                         <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
-                            <div className="text-3xl font-bold text-slate-900 dark:text-white mb-1">{score}/{HTML_QUESTIONS.length}</div>
+                            <div className="text-3xl font-bold text-slate-900 dark:text-white mb-1">{score}/{currentQuestions.length}</div>
                             <div className="text-xs text-slate-500 uppercase tracking-wide">Score</div>
                         </div>
                         <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
@@ -303,27 +354,50 @@ const ExamsPage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredExams.map(exam => (
-                    <Card key={exam.id} className="hover:shadow-lg transition-shadow border-t-4 border-indigo-500">
-                        <div className="flex justify-between items-start mb-4">
-                            <span className={`px-2 py-1 text-xs font-bold rounded uppercase ${exam.difficulty === 'Beginner' ? 'bg-green-100 text-green-700' :
-                                exam.difficulty === 'Intermediate' ? 'bg-yellow-100 text-yellow-700' :
-                                    'bg-red-100 text-red-700'
-                                }`}>
-                                {exam.difficulty}
-                            </span>
-                            <span className="text-slate-400 text-sm">{exam.duration}</span>
-                        </div>
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{exam.title}</h3>
-                        <p className="text-slate-500 text-sm mb-6">{exam.questions} Questions • Multiple Choice</p>
-                        <Button
-                            className="w-full justify-center"
-                            onClick={() => handleStartExam(exam)}
+                {filteredExams.map(exam => {
+                    const isLocked = !UNLOCKED_EXAMS.includes(exam.id);
+                    return (
+                        <Card
+                            key={exam.id}
+                            className={`hover:shadow-lg transition-shadow border-t-4 border-indigo-500 ${isLocked ? 'opacity-75 relative' : ''}`}
                         >
-                            Start Exam
-                        </Button>
-                    </Card>
-                ))}
+                            {isLocked && (
+                                <div className="absolute top-4 right-4 bg-slate-800 text-white p-2 rounded-full">
+                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                            )}
+                            <div className="flex justify-between items-start mb-4">
+                                <span className={`px-2 py-1 text-xs font-bold rounded uppercase ${exam.difficulty === 'Beginner' ? 'bg-green-100 text-green-700' :
+                                    exam.difficulty === 'Intermediate' ? 'bg-yellow-100 text-yellow-700' :
+                                        'bg-red-100 text-red-700'
+                                    }`}>
+                                    {exam.difficulty}
+                                </span>
+                                <span className="text-slate-400 text-sm">{exam.duration}</span>
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{exam.title}</h3>
+                            <p className="text-slate-500 text-sm mb-6">{exam.questions} Questions • Multiple Choice</p>
+                            <Button
+                                className={`w-full justify-center ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                onClick={() => handleStartExam(exam)}
+                                disabled={isLocked}
+                            >
+                                {isLocked ? (
+                                    <span className="flex items-center gap-2">
+                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                                        </svg>
+                                        Locked
+                                    </span>
+                                ) : (
+                                    'Start Exam'
+                                )}
+                            </Button>
+                        </Card>
+                    );
+                })}
             </div>
         </div>
     );

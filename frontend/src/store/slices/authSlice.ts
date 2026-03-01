@@ -6,6 +6,7 @@ interface User {
   username: string;
   role: 'beginner' | 'intermediate' | 'expert';
   created_at: string;
+  points?: number;
 }
 
 interface AuthState {

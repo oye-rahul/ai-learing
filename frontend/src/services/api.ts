@@ -134,6 +134,21 @@ export const aiAPI = {
     code: string;
     language: string;
   }) => api.post('/ai/execute', data),
+
+  generatePractice: (data: { skillLevel?: string; topic?: string }) =>
+    api.post('/ai/generate-practice', data),
+
+  getInsights: (userId: string) =>
+    api.get(`/ai/insights/${userId}`),
+
+  explainCodeBetter: (data: { code: string; language: string }) =>
+    api.post('/ai/explain-code', data),
+
+  debugHelp: (data: { code: string; language: string; error?: string }) =>
+    api.post('/ai/debug-help', data),
+
+  assistantChat: (data: { message: string; mode: string; conversationHistory?: { role: string; content: string }[] }) =>
+    api.post('/ai/assistant-chat', data),
 };
 
 // Learning API

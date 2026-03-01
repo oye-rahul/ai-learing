@@ -12,6 +12,91 @@ import CourseLessonView from '../components/features/CourseLessonView';
 import { toast } from 'react-toastify';
 import { bookmarksAPI } from '../services/api';
 
+// Web Development Course Data - Stable reference outside component
+const webDevCourseData = {
+  id: 'web-dev-mastery',
+  title: 'Web Development Mastery',
+  description: 'Master the building blocks of the web. Learn HTML5, CSS3, JavaScript, and modern frameworks like React.',
+  track: 'Web Development Track',
+  progress: 0,
+  totalLessons: 6,
+  currentLesson: 1,
+  lessons: [
+    {
+      id: 'html-fundamentals',
+      title: 'HTML5 Foundations',
+      description: 'Learn the structural foundation of the web. Semantic HTML, forms, and accessibility.',
+      videoUrl: 'https://www.youtube.com/embed/ok-plXXHlWw',
+      duration: '15:45',
+      transcript: 'HTML is the skeleton of every website. Today we learn about tags, structure, and semantic elements.',
+      keyPoints: ['Semantic Tags', 'Document Structure', 'Forms & Input'],
+      codeExample: `<!DOCTYPE html>\n<html>\n  <head>\n    <title>My Page</title>\n  </head>\n  <body>\n    <h1>Hello World</h1>\n    <p>Welcome to web development!</p>\n  </body>\n</html>`,
+      language: 'html',
+      resources: [{ title: 'MDN HTML Guide', url: 'https://developer.mozilla.org/en-US/docs/Web/HTML', type: 'documentation' }]
+    },
+    {
+      id: 'css-mastery',
+      title: 'CSS3 Styling',
+      description: 'Master Flexbox, Grid, and responsive design to style beautiful web interfaces.',
+      videoUrl: 'https://www.youtube.com/embed/yfoY53qxEnI',
+      duration: '20:30',
+      transcript: 'CSS brings style to the web. We will explore selectors, the box model, and modern layouts.',
+      keyPoints: ['Flexbox & Grid', 'Responsive Design', 'Animations'],
+      codeExample: `body {\n  font-family: sans-serif;\n  background: #f0f0f0;\n}\n.container {\n  display: flex;\n  justify-content: center;\n  padding: 20px;\n}`,
+      language: 'css',
+      resources: [{ title: 'CSS-Tricks Guide', url: 'https://css-tricks.com/', type: 'tutorial' }]
+    },
+    {
+      id: 'javascript-fundamentals',
+      title: 'JavaScript Fundamentals',
+      description: 'Learn JavaScript ES6+ features, DOM manipulation, and asynchronous programming.',
+      videoUrl: 'https://www.youtube.com/embed/W6NZfCO5SIk',
+      duration: '18:20',
+      transcript: 'JavaScript is the logic of the web. In this lesson, we cover variables, functions, and the DOM.',
+      keyPoints: ['ES6 Syntax', 'DOM Manipulation', 'Async/Await'],
+      codeExample: `const greet = (name) => {\n  console.log("Hello, " + name);\n};\ngreet("Developer");`,
+      language: 'javascript',
+      resources: [{ title: 'MDN JS Guide', url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript', type: 'documentation' }]
+    },
+    {
+      id: 'python-essentials',
+      title: 'Python Essentials',
+      description: 'Start your journey with Python. Learn syntax, data types, and basic automation.',
+      videoUrl: 'https://www.youtube.com/embed/rfscVS0vtbw',
+      duration: '22:15',
+      transcript: 'Python is powerful. Let\'s explore the basics of syntax and structure.',
+      keyPoints: ['Indentation', 'Loops', 'Functions'],
+      codeExample: `def hello_world():\n    print("Hello from Python!")\n\nhello_world()`,
+      language: 'python',
+      resources: [{ title: 'Python.org', url: 'https://docs.python.org/3/', type: 'documentation' }]
+    },
+    {
+      id: 'react-basics',
+      title: 'React.js Components',
+      description: 'Build modern user interfaces with React components, hooks, and state management.',
+      videoUrl: 'https://www.youtube.com/embed/bMknfKXIFA8',
+      duration: '25:40',
+      transcript: 'React is for UIs. Today we learn about components and useState.',
+      keyPoints: ['Hooks', 'Props', 'JSX'],
+      codeExample: `import React, { useState } from 'react';\n\nfunction App() {\n  return <h1>Hello React</h1>;\n}`,
+      language: 'javascript',
+      resources: [{ title: 'React.dev', url: 'https://react.dev/', type: 'documentation' }]
+    },
+    {
+      id: 'node-backend',
+      title: 'Node.js Backend',
+      description: 'Build scalable server-side applications with Node.js and Express.',
+      videoUrl: 'https://www.youtube.com/embed/fBNz5xF-Kx4',
+      duration: '19:10',
+      transcript: 'Server-side JS. We will set up an Express server and handle API requests.',
+      keyPoints: ['Express', 'Middleware', 'REST APIs'],
+      codeExample: `const express = require('express');\nconst app = express();\n\napp.get('/', (req, res) => res.send('API running!'));`,
+      language: 'javascript',
+      resources: [{ title: 'Node.js Docs', url: 'https://nodejs.org/en/docs/', type: 'documentation' }]
+    }
+  ]
+};
+
 const LearningPage: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { modules, learningPath, loading } = useSelector((state: RootState) => state.learning);
@@ -23,442 +108,7 @@ const LearningPage: React.FC = () => {
   const [currentLesson, setCurrentLesson] = useState(1);
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
 
-  // AI/ML Course Data with Transformer Architecture
-  const webDevCourse = {
-    id: 'ai-ml-mastery',
-    title: 'AI & Machine Learning Mastery',
-    description: 'Complete AI/ML course covering neural networks, transformers, and modern deep learning architectures',
-    track: 'AI Mastery Track',
-    progress: 45,
-    totalLessons: 12,
-    currentLesson: currentLesson,
-    lessons: [
-      {
-        id: 'transformer-architecture',
-        title: 'Transformer Architecture',
-        description: 'Deep dive into the Self-Attention mechanism, the core innovation behind the Transformer architecture. Learn how to implement scaled dot-product attention from scratch using Python and PyTorch.',
-        videoUrl: 'https://youtu.be/KBXVGcUvFjk',
-        duration: '12:45',
-        transcript: 'Welcome to lesson 4 on Transformer Architecture. Today we\'ll explore the revolutionary self-attention mechanism that powers modern language models like GPT and BERT. The key insight is that attention allows models to weigh the importance of different parts of the input sequence when processing each element. This overcomes the bottleneck of fixed-length context windows in RNNs and enables parallel processing of sequences.',
-        keyPoints: [
-          'Attention allows the model to dynamically focus on relevant parts of the input sequence',
-          'Self-attention mechanism enables parallel processing unlike RNNs',
-          'Scaled dot-product attention is the core building block of transformers'
-        ],
-        codeExample: `# Simple Attention Mechanism (No External Libraries)
-# This demonstrates the core concept without PyTorch
 
-import math
-
-def scaled_dot_product_attention(q, k, v):
-    """
-    Simplified attention mechanism using only Python built-ins
-    q, k, v are lists of lists (matrices)
-    """
-    d_k = len(k[0])  # dimension of keys
-    
-    # Calculate attention scores: Q * K^T
-    scores = []
-    for i in range(len(q)):
-        row = []
-        for j in range(len(k)):
-            # Dot product of q[i] and k[j]
-            dot = sum(q[i][m] * k[j][m] for m in range(d_k))
-            # Scale by sqrt(d_k)
-            row.append(dot / math.sqrt(d_k))
-        scores.append(row)
-    
-    # Apply softmax to get attention weights
-    attention_weights = []
-    for row in scores:
-        # Softmax: exp(x) / sum(exp(x))
-        exp_row = [math.exp(x) for x in row]
-        sum_exp = sum(exp_row)
-        attention_weights.append([x / sum_exp for x in exp_row])
-    
-    # Multiply attention weights with values
-    output = []
-    for i in range(len(attention_weights)):
-        row = []
-        for j in range(len(v[0])):
-            weighted_sum = sum(attention_weights[i][k] * v[k][j] 
-                             for k in range(len(v)))
-            row.append(weighted_sum)
-        output.append(row)
-    
-    return output, attention_weights
-
-# Example usage with simple 2D matrices
-q = [[1.0, 0.5], [0.5, 1.0]]  # Query
-k = [[1.0, 0.0], [0.0, 1.0]]  # Key  
-v = [[2.0, 1.0], [1.0, 2.0]]  # Value
-
-output, weights = scaled_dot_product_attention(q, k, v)
-
-print("Attention Output:")
-for row in output:
-    print([f"{x:.4f}" for x in row])
-
-print("\\nAttention Weights:")
-for row in weights:
-    print([f"{x:.4f}" for x in row])`,
-        language: 'python',
-        resources: [
-          { title: 'Attention Is All You Need (Original Paper)', url: 'https://arxiv.org/abs/1706.03762', type: 'documentation' },
-          { title: 'PyTorch MultiheadAttention Documentation', url: 'https://pytorch.org/docs/stable/generated/torch.nn.MultiheadAttention.html', type: 'documentation' },
-          { title: 'The Illustrated Transformer', url: 'https://jalammar.github.io/illustrated-transformer/', type: 'tutorial' }
-        ]
-      },
-      {
-        id: 'css-styling',
-        title: 'CSS Styling & Layout',
-        description: 'Master CSS for beautiful, responsive designs with Flexbox, Grid, and modern CSS features.',
-        videoUrl: '/videos/css-styling.mp4',
-        duration: '15:30',
-        transcript: 'CSS, or Cascading Style Sheets, is what makes websites beautiful and responsive. In this lesson, we\'ll explore modern CSS techniques including Flexbox, Grid, and responsive design principles.',
-        keyPoints: [
-          'CSS Grid and Flexbox provide powerful layout capabilities',
-          'Responsive design ensures your site works on all devices',
-          'Modern CSS features like custom properties improve maintainability'
-        ],
-        codeExample: `/* Modern CSS with Grid and Flexbox */
-:root {
-    --primary-color: #3b82f6;
-    --secondary-color: #1e40af;
-    --text-color: #1f2937;
-    --bg-color: #f9fafb;
-}
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Inter', sans-serif;
-    color: var(--text-color);
-    background-color: var(--bg-color);
-    line-height: 1.6;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-/* Header with Flexbox */
-header {
-    background: white;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
-
-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 0;
-}
-
-nav ul {
-    display: flex;
-    list-style: none;
-    gap: 2rem;
-}
-
-nav a {
-    text-decoration: none;
-    color: var(--text-color);
-    font-weight: 500;
-    transition: color 0.3s ease;
-}
-
-nav a:hover {
-    color: var(--primary-color);
-}
-
-/* Main content with Grid */
-.hero {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
-    align-items: center;
-    min-height: 80vh;
-    padding: 4rem 0;
-}
-
-.hero-content h1 {
-    font-size: 3rem;
-    font-weight: 800;
-    margin-bottom: 1rem;
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.hero-content p {
-    font-size: 1.2rem;
-    margin-bottom: 2rem;
-    color: #6b7280;
-}
-
-.btn {
-    display: inline-block;
-    padding: 1rem 2rem;
-    background: var(--primary-color);
-    color: white;
-    text-decoration: none;
-    border-radius: 8px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    border: none;
-    cursor: pointer;
-}
-
-.btn:hover {
-    background: var(--secondary-color);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
-}
-
-/* Features Grid */
-.features {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-    padding: 4rem 0;
-}
-
-.feature-card {
-    background: white;
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease;
-}
-
-.feature-card:hover {
-    transform: translateY(-5px);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .hero {
-        grid-template-columns: 1fr;
-        text-align: center;
-    }
-    
-    .hero-content h1 {
-        font-size: 2rem;
-    }
-    
-    nav {
-        flex-direction: column;
-        gap: 1rem;
-    }
-    
-    nav ul {
-        gap: 1rem;
-    }
-}`,
-        language: 'css',
-        resources: [
-          { title: 'CSS Grid Guide', url: 'https://css-tricks.com/snippets/css/complete-guide-grid/', type: 'tutorial' },
-          { title: 'Flexbox Guide', url: 'https://css-tricks.com/snippets/css/a-guide-to-flexbox/', type: 'tutorial' },
-          { title: 'Modern CSS Features', url: 'https://web.dev/learn/css/', type: 'documentation' }
-        ]
-      },
-      {
-        id: 'javascript-fundamentals',
-        title: 'JavaScript Fundamentals',
-        description: 'Learn JavaScript ES6+ features, DOM manipulation, and asynchronous programming.',
-        videoUrl: '/videos/javascript-fundamentals.mp4',
-        duration: '18:20',
-        transcript: 'JavaScript is the programming language of the web. In this comprehensive lesson, we\'ll cover ES6+ features, DOM manipulation, event handling, and asynchronous programming with promises and async/await.',
-        keyPoints: [
-          'ES6+ features like arrow functions, destructuring, and modules modernize JavaScript',
-          'DOM manipulation allows dynamic interaction with web pages',
-          'Asynchronous programming handles time-consuming operations without blocking the UI'
-        ],
-        codeExample: `// Modern JavaScript ES6+ Features
-console.log('🚀 Welcome to JavaScript Fundamentals!');
-
-// 1. Variables and Constants
-const APP_NAME = 'FlowState';
-let currentUser = null;
-var legacyVariable = 'avoid using var';
-
-// 2. Arrow Functions
-const greetUser = (name) => {
-    return \`Hello, \${name}! Welcome to \${APP_NAME}\`;
-};
-
-// Shorter arrow function
-const square = x => x * x;
-
-// 3. Destructuring
-const user = {
-    name: 'Alice',
-    age: 30,
-    skills: ['JavaScript', 'React', 'Node.js']
-};
-
-const { name, age, skills } = user;
-const [primarySkill, ...otherSkills] = skills;
-
-console.log(\`\${name} is \${age} years old\`);
-console.log(\`Primary skill: \${primarySkill}\`);
-
-// 4. Template Literals
-const userInfo = \`
-    Name: \${name}
-    Age: \${age}
-    Skills: \${skills.join(', ')}
-\`;
-
-// 5. Array Methods
-const numbers = [1, 2, 3, 4, 5];
-
-const doubled = numbers.map(n => n * 2);
-const evens = numbers.filter(n => n % 2 === 0);
-const sum = numbers.reduce((acc, n) => acc + n, 0);
-
-console.log('Doubled:', doubled);
-console.log('Evens:', evens);
-console.log('Sum:', sum);
-
-// 6. Classes
-class Developer {
-    constructor(name, language) {
-        this.name = name;
-        this.language = language;
-        this.projects = [];
-    }
-    
-    addProject(project) {
-        this.projects.push(project);
-        console.log(\`\${this.name} added project: \${project}\`);
-    }
-    
-    getInfo() {
-        return \`\${this.name} develops in \${this.language}\`;
-    }
-}
-
-const developer = new Developer('Bob', 'JavaScript');
-developer.addProject('FlowState Clone');
-
-// 7. Promises and Async/Await
-const fetchUserData = async (userId) => {
-    try {
-        console.log(\`Fetching data for user \${userId}...\`);
-        
-        // Simulate API call
-        const response = await new Promise((resolve) => {
-            setTimeout(() => {
-                resolve({
-                    id: userId,
-                    name: 'John Doe',
-                    email: 'john@example.com'
-                });
-            }, 1000);
-        });
-        
-        console.log('User data received:', response);
-        return response;
-    } catch (error) {
-        console.error('Error fetching user data:', error);
-    }
-};
-
-// 8. DOM Manipulation
-const initializeApp = () => {
-    // Create elements
-    const container = document.createElement('div');
-    container.className = 'app-container';
-    
-    const title = document.createElement('h1');
-    title.textContent = 'FlowState JavaScript Demo';
-    title.style.color = '#3b82f6';
-    
-    const button = document.createElement('button');
-    button.textContent = 'Click me!';
-    button.className = 'btn btn-primary';
-    
-    // Event handling
-    button.addEventListener('click', async () => {
-        button.textContent = 'Loading...';
-        button.disabled = true;
-        
-        const userData = await fetchUserData(123);
-        
-        button.textContent = 'Data Loaded!';
-        button.style.backgroundColor = '#10b981';
-        
-        // Show user data
-        const userDisplay = document.createElement('div');
-        userDisplay.innerHTML = \`
-            <h3>User Information:</h3>
-            <p>Name: \${userData.name}</p>
-            <p>Email: \${userData.email}</p>
-        \`;
-        container.appendChild(userDisplay);
-    });
-    
-    // Append to DOM
-    container.appendChild(title);
-    container.appendChild(button);
-    
-    // Add to page (if body exists)
-    if (document.body) {
-        document.body.appendChild(container);
-    }
-};
-
-// 9. Module Pattern
-const MathUtils = {
-    add: (a, b) => a + b,
-    multiply: (a, b) => a * b,
-    factorial: (n) => n <= 1 ? 1 : n * MathUtils.factorial(n - 1)
-};
-
-// 10. Error Handling
-const safeOperation = (operation) => {
-    try {
-        return operation();
-    } catch (error) {
-        console.error('Operation failed:', error.message);
-        return null;
-    }
-};
-
-// Execute demo
-console.log(greetUser('Developer'));
-console.log('Square of 5:', square(5));
-console.log('Factorial of 5:', MathUtils.factorial(5));
-
-// Initialize app when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeApp);
-} else {
-    initializeApp();
-}
-
-// Fetch user data
-fetchUserData(456);`,
-        language: 'javascript',
-        resources: [
-          { title: 'MDN JavaScript Guide', url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide', type: 'documentation' },
-          { title: 'ES6 Features', url: 'https://github.com/lukehoban/es6features', type: 'tutorial' },
-          { title: 'JavaScript.info', url: 'https://javascript.info/', type: 'tutorial' }
-        ]
-      }
-    ]
-  };
 
   useEffect(() => {
     dispatch(fetchLearningModules());
@@ -514,13 +164,21 @@ fetchUserData(456);`,
   };
 
   const handleStartCourse = (courseId: string) => {
-    if (courseId === 'ai-ml-mastery') {
-      setSelectedCourse(webDevCourse);
-      setCurrentLesson(4);
-    } else {
+    let lessonIndex = 1;
+    if (courseId === 'web-dev-mastery' || courseId === 'html-demo') lessonIndex = 1;
+    else if (courseId === 'css-demo') lessonIndex = 2;
+    else if (courseId === 'js-demo') lessonIndex = 3;
+    else if (courseId === 'python-demo') lessonIndex = 4;
+    else if (courseId === 'react-demo') lessonIndex = 5;
+    else if (courseId === 'node-demo') lessonIndex = 6;
+    else {
       const module = modules.find((m: any) => m.id === courseId);
       if (module) handleStartModule(module);
+      return;
     }
+
+    setSelectedCourse({ ...webDevCourseData, currentLesson: lessonIndex });
+    setCurrentLesson(lessonIndex);
   };
 
   const handleNextLesson = async () => {
@@ -652,50 +310,50 @@ fetchUserData(456);`,
         </div>
       </div>
 
-      {/* Featured Course - AI & Machine Learning */}
-      <Card className="bg-gradient-to-r from-purple-600 to-blue-600 text-white mb-6">
+      {/* Featured Course - Web Development */}
+      <Card className="bg-gradient-to-r from-indigo-600 to-emerald-600 text-white mb-6">
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <div className="flex items-center space-x-2 mb-2">
               <span className="bg-white/20 text-xs px-2 py-1 rounded-full">FEATURED COURSE</span>
-              <span className="bg-green-500/20 text-xs px-2 py-1 rounded-full">🔥 POPULAR</span>
+              <span className="bg-green-500/20 text-xs px-2 py-1 rounded-full">🌐 WEB DEV</span>
             </div>
-            <h2 className="text-2xl font-bold mb-2">AI & Machine Learning Mastery</h2>
-            <p className="text-purple-100 mb-4">
-              Complete AI/ML course covering neural networks, transformers, and modern deep learning architectures.
-              Build real AI applications and master cutting-edge technologies.
+            <h2 className="text-2xl font-bold mb-2">Web Development (HTML, CSS, JS)</h2>
+            <p className="text-indigo-100 mb-4">
+              Master the building blocks of the web. Learn HTML5 for structure, CSS3 for styling,
+              and JavaScript for interactivity. Start from scratch and build real-world websites.
             </p>
             <div className="flex items-center space-x-6 text-sm mb-4">
               <div className="flex items-center space-x-1">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span>28 hours</span>
+                <span>35 hours</span>
               </div>
               <div className="flex items-center space-x-1">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
-                <span>12 lessons</span>
+                <span>6 lessons</span>
               </div>
               <div className="flex items-center space-x-1">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span>Certificate included</span>
+                <span>Full Access</span>
               </div>
             </div>
             <div className="flex items-center space-x-4">
               <Button
-                onClick={() => handleStartCourse('ai-ml-mastery')}
-                className="bg-white text-purple-700 hover:bg-purple-50 font-semibold"
+                onClick={() => handleStartCourse('web-dev-mastery')}
+                className="bg-emerald-500 hover:bg-emerald-400 text-white font-semibold shadow-lg border-0"
               >
-                Start Course
+                Start Learning
               </Button>
               <div className="flex items-center space-x-2">
-                <span className="text-sm">Progress: 45%</span>
+                <span className="text-sm">Progress: 0%</span>
                 <div className="w-24 bg-white/20 rounded-full h-2">
-                  <div className="bg-white h-2 rounded-full" style={{ width: '45%' }}></div>
+                  <div className="bg-white h-2 rounded-full" style={{ width: '0%' }}></div>
                 </div>
               </div>
             </div>
@@ -806,304 +464,124 @@ fetchUserData(456);`,
               </p>
             </div>
 
-            {/* Demo Course 1: AI & Machine Learning */}
-            <Card hover onClick={() => handleStartCourse('ai-ml-demo')}>
+            {/* HTML Demo */}
+            <Card hover onClick={() => handleStartCourse('html-demo')}>
               <div className="flex items-start justify-between mb-3">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                  🤖 AI & Machine Learning Fundamentals
-                </h3>
-                <span className="text-xs font-medium px-2 py-1 rounded-full text-purple-600 bg-purple-100 dark:bg-purple-900 dark:text-purple-300">
-                  Advanced
-                </span>
-              </div>
-
-              <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
-                Dive into the world of artificial intelligence and machine learning. Learn neural networks,
-                deep learning, and build AI applications with Python and TensorFlow.
-              </p>
-
-              <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 mb-4">
-                <span className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  16h
-                </span>
-                <span className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  8 lessons
-                </span>
-              </div>
-
-              <div className="mb-4">
-                <div className="flex flex-wrap gap-1">
-                  <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded">
-                    Python
-                  </span>
-                  <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded">
-                    TensorFlow
-                  </span>
-                  <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded">
-                    Neural Networks
-                  </span>
-                </div>
-              </div>
-
-              <Button className="w-full">
-                Start Demo Course
-              </Button>
-            </Card>
-
-            {/* Demo Course 2: Mobile App Development */}
-            <Card hover onClick={() => handleStartCourse('mobile-dev-demo')}>
-              <div className="flex items-start justify-between mb-3">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                  📱 Mobile App Development
+                  📄 HTML5 Foundations
                 </h3>
                 <span className="text-xs font-medium px-2 py-1 rounded-full text-orange-600 bg-orange-100 dark:bg-orange-900 dark:text-orange-300">
-                  Intermediate
-                </span>
-              </div>
-
-              <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
-                Build cross-platform mobile applications using React Native. Learn navigation,
-                state management, and how to publish apps to app stores.
-              </p>
-
-              <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 mb-4">
-                <span className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  20h
-                </span>
-                <span className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  10 lessons
-                </span>
-              </div>
-
-              <div className="mb-4">
-                <div className="flex flex-wrap gap-1">
-                  <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded">
-                    React Native
-                  </span>
-                  <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded">
-                    JavaScript
-                  </span>
-                  <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded">
-                    iOS & Android
-                  </span>
-                </div>
-              </div>
-
-              <Button className="w-full">
-                Start Demo Course
-              </Button>
-            </Card>
-
-            {/* Demo Course 3: Cloud Computing */}
-            <Card hover onClick={() => handleStartCourse('cloud-computing-demo')}>
-              <div className="flex items-start justify-between mb-3">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                  ☁️ Cloud Computing with AWS
-                </h3>
-                <span className="text-xs font-medium px-2 py-1 rounded-full text-blue-600 bg-blue-100 dark:bg-blue-900 dark:text-blue-300">
-                  Intermediate
-                </span>
-              </div>
-
-              <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
-                Master cloud computing concepts with Amazon Web Services. Learn about EC2, S3,
-                Lambda, and how to deploy scalable applications in the cloud.
-              </p>
-
-              <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 mb-4">
-                <span className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  14h
-                </span>
-                <span className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  7 lessons
-                </span>
-              </div>
-
-              <div className="mb-4">
-                <div className="flex flex-wrap gap-1">
-                  <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded">
-                    AWS
-                  </span>
-                  <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded">
-                    Docker
-                  </span>
-                  <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded">
-                    DevOps
-                  </span>
-                </div>
-              </div>
-
-              <Button className="w-full">
-                Start Demo Course
-              </Button>
-            </Card>
-
-            {/* Demo Course 4: Data Science */}
-            <Card hover onClick={() => handleStartCourse('data-science-demo')}>
-              <div className="flex items-start justify-between mb-3">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                  📊 Data Science & Analytics
-                </h3>
-                <span className="text-xs font-medium px-2 py-1 rounded-full text-green-600 bg-green-100 dark:bg-green-900 dark:text-green-300">
                   Beginner
                 </span>
               </div>
-
               <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
-                Learn data science fundamentals with Python. Master pandas, numpy, matplotlib,
-                and build your first machine learning models for data analysis.
+                Learn to build the structure of modern websites using semantic HTML5.
               </p>
-
               <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 mb-4">
-                <span className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  12h
-                </span>
-                <span className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  6 lessons
-                </span>
+                <span className="flex items-center"><svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>5h</span>
+                <span className="flex items-center"><svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>0%</span>
               </div>
-
-              <div className="mb-4">
-                <div className="flex flex-wrap gap-1">
-                  <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded">
-                    Python
-                  </span>
-                  <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded">
-                    Pandas
-                  </span>
-                  <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded">
-                    Visualization
-                  </span>
-                </div>
-              </div>
-
-              <Button className="w-full">
-                Start Demo Course
-              </Button>
+              <Button className="w-full">Start Course</Button>
             </Card>
 
-            {/* Demo Course 5: Cybersecurity */}
-            <Card hover onClick={() => handleStartCourse('cybersecurity-demo')}>
+            {/* CSS Demo */}
+            <Card hover onClick={() => handleStartCourse('css-demo')}>
               <div className="flex items-start justify-between mb-3">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                  🔒 Cybersecurity Fundamentals
-                </h3>
-                <span className="text-xs font-medium px-2 py-1 rounded-full text-red-600 bg-red-100 dark:bg-red-900 dark:text-red-300">
-                  Advanced
-                </span>
-              </div>
-
-              <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
-                Learn essential cybersecurity concepts, ethical hacking, network security,
-                and how to protect systems from cyber threats and vulnerabilities.
-              </p>
-
-              <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 mb-4">
-                <span className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  18h
-                </span>
-                <span className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  9 lessons
-                </span>
-              </div>
-
-              <div className="mb-4">
-                <div className="flex flex-wrap gap-1">
-                  <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded">
-                    Ethical Hacking
-                  </span>
-                  <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded">
-                    Network Security
-                  </span>
-                  <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded">
-                    Penetration Testing
-                  </span>
-                </div>
-              </div>
-
-              <Button className="w-full">
-                Start Demo Course
-              </Button>
-            </Card>
-
-            {/* Demo Course 6: Game Development */}
-            <Card hover onClick={() => handleStartCourse('game-dev-demo')}>
-              <div className="flex items-start justify-between mb-3">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-                  🎮 Game Development with Unity
+                  🎨 CSS3 Mastery
                 </h3>
                 <span className="text-xs font-medium px-2 py-1 rounded-full text-indigo-600 bg-indigo-100 dark:bg-indigo-900 dark:text-indigo-300">
+                  Beginner
+                </span>
+              </div>
+              <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
+                Master styling, layouts with Grid/Flexbox, and responsive design.
+              </p>
+              <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 mb-4">
+                <span className="flex items-center"><svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>8h</span>
+                <span className="flex items-center"><svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>0%</span>
+              </div>
+              <Button className="w-full">Start Course</Button>
+            </Card>
+
+            {/* JS Demo */}
+            <Card hover onClick={() => handleStartCourse('js-demo')}>
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                  📜 JavaScript Fundamentals
+                </h3>
+                <span className="text-xs font-medium px-2 py-1 rounded-full text-yellow-600 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-300">
+                  Beginner
+                </span>
+              </div>
+              <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
+                Core logic, ES6 features, and DOM manipulation for the web.
+              </p>
+              <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 mb-4">
+                <span className="flex items-center"><svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>12h</span>
+                <span className="flex items-center"><svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>0%</span>
+              </div>
+              <Button className="w-full">Start Course</Button>
+            </Card>
+
+            {/* Python Demo */}
+            <Card hover onClick={() => handleStartCourse('python-demo')}>
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                  🐍 Python Essentials
+                </h3>
+                <span className="text-xs font-medium px-2 py-1 rounded-full text-blue-600 bg-blue-100 dark:bg-blue-900 dark:text-blue-300">
+                  Beginner
+                </span>
+              </div>
+              <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
+                Learn Python syntax, data structures, and automation basics.
+              </p>
+              <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 mb-4">
+                <span className="flex items-center"><svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>10h</span>
+                <span className="flex items-center"><svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>0%</span>
+              </div>
+              <Button className="w-full">Start Course</Button>
+            </Card>
+
+            {/* React Demo */}
+            <Card hover onClick={() => handleStartCourse('react-demo')}>
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                  ⚛️ React.js Libraries
+                </h3>
+                <span className="text-xs font-medium px-2 py-1 rounded-full text-cyan-600 bg-cyan-100 dark:bg-cyan-900 dark:text-cyan-300">
+                  Beginner
+                </span>
+              </div>
+              <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
+                Build reactive interfaces using components and state hooks.
+              </p>
+              <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 mb-4">
+                <span className="flex items-center"><svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>15h</span>
+                <span className="flex items-center"><svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>0%</span>
+              </div>
+              <Button className="w-full">Start Course</Button>
+            </Card>
+
+            {/* Node Demo */}
+            <Card hover onClick={() => handleStartCourse('node-demo')}>
+              <div className="flex items-start justify-between mb-3">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                  🟢 Node.js Backend
+                </h3>
+                <span className="text-xs font-medium px-2 py-1 rounded-full text-green-600 bg-green-100 dark:bg-green-900 dark:text-green-300">
                   Intermediate
                 </span>
               </div>
-
               <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
-                Create amazing 2D and 3D games using Unity and C#. Learn game physics,
-                animation, UI design, and publish your games to multiple platforms.
+                Scale your applications using Node.js and Express servers.
               </p>
-
               <div className="flex items-center justify-between text-sm text-slate-500 dark:text-slate-400 mb-4">
-                <span className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  22h
-                </span>
-                <span className="flex items-center">
-                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  11 lessons
-                </span>
+                <span className="flex items-center"><svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>12h</span>
+                <span className="flex items-center"><svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>0%</span>
               </div>
-
-              <div className="mb-4">
-                <div className="flex flex-wrap gap-1">
-                  <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded">
-                    Unity
-                  </span>
-                  <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded">
-                    C#
-                  </span>
-                  <span className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded">
-                    3D Graphics
-                  </span>
-                </div>
-              </div>
-
-              <Button className="w-full">
-                Start Demo Course
-              </Button>
+              <Button className="w-full">Start Course</Button>
             </Card>
           </>
         ) : (
@@ -1143,11 +621,11 @@ fetchUserData(456);`,
                 </div>
               )}
 
-              {module.prerequisites && module.prerequisites.length > 0 && (
+              {module.prerequisites && Array.isArray(module.prerequisites) && module.prerequisites.length > 0 && (
                 <div className="mb-4">
                   <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Prerequisites:</p>
                   <div className="flex flex-wrap gap-1">
-                    {module.prerequisites.map((prereq, index) => (
+                    {module.prerequisites.map((prereq: string, index: number) => (
                       <span key={index} className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 px-2 py-1 rounded">
                         {prereq}
                       </span>

@@ -240,6 +240,41 @@ const initializeDatabase = async () => {
       )
     `);
 
+    // AI Conversations (multi-turn chat history)
+    await query(`
+      CREATE TABLE IF NOT EXISTS ai_conversations (
+        id TEXT PRIMARY KEY,
+        user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+        messages TEXT NOT NULL,
+        context TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Practice Problems
+    await query(`
+      CREATE TABLE IF NOT EXISTS practice_problems (
+        id TEXT PRIMARY KEY,
+        user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+        problem TEXT NOT NULL,
+        solution TEXT,
+        difficulty TEXT,
+        completed_at DATETIME
+      )
+    `);
+
+    // Learning Insights
+    await query(`
+      CREATE TABLE IF NOT EXISTS learning_insights (
+        id TEXT PRIMARY KEY,
+        user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+        strengths TEXT DEFAULT '[]',
+        weaknesses TEXT DEFAULT '[]',
+        recommendations TEXT DEFAULT '[]',
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // Insert sample learning modules
     const existingModules = await query('SELECT COUNT(*) as count FROM learning_modules');
     if (existingModules.rows[0].count === 0) {

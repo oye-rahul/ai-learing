@@ -3,6 +3,7 @@ import Card from '../components/shared/Card';
 import Button from '../components/shared/Button';
 import AdvancedCodeEnvironment from '../components/features/AdvancedCodeEnvironment';
 import PythonEnvironment from '../components/features/PythonEnvironment';
+import JavaEnvironment from '../components/features/JavaEnvironment';
 
 const PlaygroundPage: React.FC = () => {
   const [selectedEnvironment, setSelectedEnvironment] = useState<string | null>(null);
@@ -16,6 +17,7 @@ const PlaygroundPage: React.FC = () => {
       color: 'from-blue-500 to-cyan-500',
       languages: ['html', 'css', 'javascript', 'typescript', 'react', 'vue'],
       features: ['Live Preview', 'Responsive Design', 'Browser DevTools', 'Package Manager'],
+      locked: false,
     },
     {
       id: 'python',
@@ -25,6 +27,7 @@ const PlaygroundPage: React.FC = () => {
       color: 'from-green-500 to-emerald-500',
       languages: ['python'],
       features: ['Jupyter Notebooks', 'Data Visualization', 'ML Libraries', 'Package Installation'],
+      locked: false,
     },
     {
       id: 'java',
@@ -34,6 +37,7 @@ const PlaygroundPage: React.FC = () => {
       color: 'from-orange-500 to-red-500',
       languages: ['java'],
       features: ['Maven/Gradle', 'Spring Framework', 'JUnit Testing', 'Android SDK'],
+      locked: false,
     },
     {
       id: 'cpp',
@@ -43,6 +47,7 @@ const PlaygroundPage: React.FC = () => {
       color: 'from-purple-500 to-indigo-500',
       languages: ['c', 'cpp'],
       features: ['GCC/Clang', 'Memory Management', 'Performance Profiling', 'CMake'],
+      locked: true,
     },
     {
       id: 'csharp',
@@ -52,6 +57,7 @@ const PlaygroundPage: React.FC = () => {
       color: 'from-indigo-500 to-purple-500',
       languages: ['csharp'],
       features: ['.NET Framework', 'Visual Studio', 'NuGet Packages', 'Unity Integration'],
+      locked: true,
     },
     {
       id: 'universal',
@@ -61,6 +67,7 @@ const PlaygroundPage: React.FC = () => {
       color: 'from-slate-500 to-slate-500',
       languages: ['javascript', 'python', 'java', 'cpp', 'csharp', 'go', 'rust', 'php'],
       features: ['Multi-language', 'Extensions', 'Git Integration', 'Terminal'],
+      locked: true,
     },
     {
       id: 'go',
@@ -70,6 +77,7 @@ const PlaygroundPage: React.FC = () => {
       color: 'from-cyan-500 to-blue-500',
       languages: ['go'],
       features: ['Goroutines', 'Built-in Testing', 'Cross Compilation', 'Package Management'],
+      locked: true,
     },
     {
       id: 'rust',
@@ -79,6 +87,7 @@ const PlaygroundPage: React.FC = () => {
       color: 'from-orange-600 to-red-600',
       languages: ['rust'],
       features: ['Memory Safety', 'Zero-cost Abstractions', 'Cargo Package Manager', 'WebAssembly'],
+      locked: true,
     },
     {
       id: 'php',
@@ -88,6 +97,7 @@ const PlaygroundPage: React.FC = () => {
       color: 'from-purple-600 to-indigo-600',
       languages: ['php'],
       features: ['Laravel Framework', 'Composer', 'Database Integration', 'Web APIs'],
+      locked: true,
     },
     {
       id: 'nodejs',
@@ -97,6 +107,7 @@ const PlaygroundPage: React.FC = () => {
       color: 'from-green-600 to-emerald-600',
       languages: ['javascript', 'typescript'],
       features: ['NPM Packages', 'Express.js', 'Real-time Apps', 'Microservices'],
+      locked: true,
     },
   ];
   if (selectedEnvironment) {
@@ -113,6 +124,13 @@ const PlaygroundPage: React.FC = () => {
       } else if (env.id === 'web-dev') {
         return (
           <AdvancedCodeEnvironment
+            environment={env}
+            onBack={() => setSelectedEnvironment(null)}
+          />
+        );
+      } else if (env.id === 'java') {
+        return (
+          <JavaEnvironment
             environment={env}
             onBack={() => setSelectedEnvironment(null)}
           />
@@ -148,41 +166,58 @@ const PlaygroundPage: React.FC = () => {
       {/* Environment Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         {programmingEnvironments.map((env) => (
-          <Card
-            key={env.id}
-            hover
-            className="cursor-pointer transform transition-all duration-200 hover:scale-105"
-            onClick={() => setSelectedEnvironment(env.id)}
-          >
-            <div className={`h-2 bg-gradient-to-r ${env.color} rounded-t-lg -m-6 mb-4`} />
-            <div className="text-center">
-              <div className="text-4xl mb-3">{env.icon}</div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-                {env.title}
-              </h3>
-              <p className="text-slate-600 dark:text-slate-400 mb-4">
-                {env.description}
-              </p>
-              <div className="flex flex-wrap gap-2 justify-center mb-4">
-                {env.languages.slice(0, 3).map((lang, index) => (
-                  <span
-                    key={index}
-                    className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs"
-                  >
-                    {lang}
-                  </span>
-                ))}
-                {env.languages.length > 3 && (
-                  <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs">
-                    +{env.languages.length - 3} more
-                  </span>
-                )}
+          <div key={env.id} className="relative group h-full">
+            <Card
+              hover={!env.locked}
+              className={`h-full ${env.locked ? 'opacity-60 cursor-not-allowed grayscale-[50%]' : 'cursor-pointer transform transition-all duration-200 hover:scale-105'}`}
+              onClick={() => {
+                if (!env.locked) {
+                  setSelectedEnvironment(env.id);
+                }
+              }}
+            >
+              <div className={`h-2 bg-gradient-to-r ${env.color} rounded-t-lg -m-6 mb-4`} />
+              <div className="text-center">
+                <div className="text-4xl mb-3 relative inline-block">
+                  {env.icon}
+                  {env.locked && (
+                    <div className="absolute -bottom-2 -right-2 bg-slate-800 text-white p-1 rounded-full text-xs shadow-lg">
+                      🔒
+                    </div>
+                  )}
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                  {env.title}
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400 mb-4">
+                  {env.description}
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center mb-4">
+                  {env.languages.slice(0, 3).map((lang, index) => (
+                    <span
+                      key={index}
+                      className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs"
+                    >
+                      {lang}
+                    </span>
+                  ))}
+                  {env.languages.length > 3 && (
+                    <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs">
+                      +{env.languages.length - 3} more
+                    </span>
+                  )}
+                </div>
+                <Button 
+                  variant={env.locked ? "ghost" : "primary"} 
+                  size="sm" 
+                  className="w-full"
+                  disabled={env.locked}
+                >
+                  {env.locked ? "Coming Soon" : "Launch Environment"}
+                </Button>
               </div>
-              <Button variant="primary" size="sm" className="w-full">
-                Launch Environment
-              </Button>
-            </div>
-          </Card>
+            </Card>
+          </div>
         ))}
       </div>
       {/* Features Overview */}

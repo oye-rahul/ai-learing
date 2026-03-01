@@ -638,6 +638,43 @@ router.post('/learn-chat', authenticateToken, [
   }
 });
 
+// AI Assistant - Mode-specific chat
+router.post('/assistant-chat', authenticateToken, [
+  body('message').notEmpty().trim(),
+  body('mode').notEmpty().trim(),
+  body('conversationHistory').optional().isArray(),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: errors.array(),
+      });
+    }
+
+    const { message, mode, conversationHistory = [] } = req.body;
+    const service = getGeminiService(req);
+    const response = await service.assistantModeChat(message, mode, conversationHistory);
+    const usedFallback = service.lastResponseUsedFallback;
+
+    // Log the interaction
+    await logAIInteraction(req.user.id, `assistant-${mode}`, message, response, 0);
+
+    res.json({
+      id: uuidv4(),
+      response,
+      message,
+      mode,
+      fallback: usedFallback,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Assistant chat error:', error);
+    return handleGeminiError(error, res);
+  }
+});
+
 // Test API key endpoint
 router.post('/test-key', authenticateToken, async (req, res) => {
   try {
@@ -834,6 +871,111 @@ router.delete('/files/:fileId', authenticateToken, async (req, res) => {
       error: 'Internal server error',
       message: 'Failed to delete file',
     });
+  }
+});
+
+// Alias for explain code
+router.post('/explain-code', authenticateToken, [
+  body('code').notEmpty().trim(),
+  body('language').notEmpty().trim(),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ error: 'Validation failed', details: errors.array() });
+    }
+    const { code, language } = req.body;
+    const service = getGeminiService(req);
+    const explanation = await service.explainCode(code, language);
+    await logAIInteraction(req.user.id, 'explain', code, explanation, 0);
+    res.json({ id: uuidv4(), explanation, input_code: code, language });
+  } catch (error) {
+    return handleGeminiError(error, res);
+  }
+});
+
+// Alias for debug help
+router.post('/debug-help', authenticateToken, [
+  body('code').notEmpty().trim(),
+  body('language').notEmpty().trim(),
+  body('error').optional().trim(),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ error: 'Validation failed', details: errors.array() });
+    }
+    const { code, language, error: errorMessage } = req.body;
+    const service = getGeminiService(req);
+    const debugSuggestions = await service.debugCode(code, language, errorMessage);
+    await logAIInteraction(req.user.id, 'debug', code, debugSuggestions, 0);
+    res.json({ id: uuidv4(), debug_suggestions: debugSuggestions, input_code: code, language, error_message: errorMessage });
+  } catch (error) {
+    return handleGeminiError(error, res);
+  }
+});
+
+// Generate practice problems
+router.post('/generate-practice', authenticateToken, [
+  body('skillLevel').optional().trim(),
+  body('topic').optional().trim(),
+], async (req, res) => {
+  try {
+    const { skillLevel = 'beginner', topic = 'javascript' } = req.body;
+    const service = getGeminiService(req);
+    const problem = await service.generatePracticeProblem(skillLevel, topic);
+
+    // Save to database
+    const problemId = uuidv4();
+    await query(
+      'INSERT INTO practice_problems (id, user_id, problem, difficulty) VALUES (?, ?, ?, ?)',
+      [problemId, req.user.id, JSON.stringify(problem), problem.difficulty]
+    );
+
+    res.json({ id: problemId, ...problem });
+  } catch (error) {
+    return handleGeminiError(error, res);
+  }
+});
+
+// Get learning insights
+router.get('/insights/:userId', authenticateToken, async (req, res) => {
+  try {
+    if (req.params.userId !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const userProgress = await query('SELECT * FROM user_progress WHERE user_id = ?', [req.params.userId]);
+    const aiInteractions = await query('SELECT prompt_type, COUNT(*) as count FROM ai_interactions WHERE user_id = ? GROUP BY prompt_type', [req.params.userId]);
+    const assessments = await query('SELECT * FROM assessment_results WHERE user_id = ? ORDER BY created_at DESC LIMIT 1', [req.params.userId]);
+
+    const userData = {
+      progress: userProgress.rows[0] || {},
+      aiUsage: aiInteractions.rows || [],
+      assessment: assessments.rows[0] || {}
+    };
+
+    const service = getGeminiService(req);
+    const insights = await service.getLearningInsights(userData);
+
+    const insightId = uuidv4();
+    const existing = await query('SELECT id FROM learning_insights WHERE user_id = ?', [req.params.userId]);
+
+    if (existing.rows.length > 0) {
+      await query(
+        'UPDATE learning_insights SET strengths = ?, weaknesses = ?, recommendations = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?',
+        [JSON.stringify(insights.strengths || []), JSON.stringify(insights.weaknesses || []), JSON.stringify(insights.recommendations || []), req.params.userId]
+      );
+    } else {
+      await query(
+        'INSERT INTO learning_insights (id, user_id, strengths, weaknesses, recommendations) VALUES (?, ?, ?, ?, ?)',
+        [insightId, req.params.userId, JSON.stringify(insights.strengths || []), JSON.stringify(insights.weaknesses || []), JSON.stringify(insights.recommendations || [])]
+      );
+    }
+
+    res.json(insights);
+  } catch (error) {
+    return handleGeminiError(error, res);
   }
 });
 

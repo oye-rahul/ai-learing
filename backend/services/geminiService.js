@@ -301,6 +301,41 @@ Terminal Output:`;
     return this._callApi(prompt, 'Code Simulation');
   }
 
+  async assistantModeChat(message, mode, conversationHistory = []) {
+    const historyContext = conversationHistory.length > 0
+      ? `Previous conversation history:\n${conversationHistory.map(h => `${h.role}: ${h.content}`).join('\n')}\n\n`
+      : '';
+
+    const modePrompts = {
+      'concept-explainer': "You are the 'Concept Explainer'. Your mission is to take complex, intimidating technical topics and make them crystal clear. Use analogies, ELI5 patterns, and structured sections.",
+      'code-tutor': "You are the 'Code Tutor'. Your mission is to help people learn programming. Focus on 'the why', best practices, and guided discovery rather than just giving answers.",
+      'workflow-optimizer': "You are the 'Workflow Optimizer'. Your mission is to help developers become 10x more productive. Focus on automation, tools, refactoring, and efficiency.",
+      'knowledge-organizer': "You are the 'Knowledge Organizer'. Your mission is to help students synthesize and retain information. Use lists, summaries, and 'mental models'.",
+      'debugging-assistant': "You are the 'Debugging Assistant'. Your mission is to methodically identify, explain, and fix bugs. Teach debugging techniques along the way.",
+      'documentation-helper': "You are the 'Documentation Helper'. Your mission is to turn messy thoughts and code into beautiful, searchable, and professional documentation."
+    };
+
+    const selectedPrompt = modePrompts[mode] || "You are an amazing AI Learning Assistant.";
+
+    const prompt = `${historyContext}${selectedPrompt}
+    
+    The user's request is: "${message}"
+    
+    CRITICAL: Provide an AMAZING, RICH, and VISUALLY STUNNING response using Markdown.
+    
+    Your response MUST include:
+    1. 🚀 **A punchy, exciting headline** for the main answer.
+    2. 💡 **Rich formatting**: Use bold, italics, and clear lists.
+    3. 💻 **Code Blocks**: If relevant, include clean, well-commented code with highlighting.
+    4. 🧩 **Breakdown**: Use <h3> headers to separate different parts of your explanation.
+    5. 🧠 **Pro-Tip / Knowledge Bite**: Add a specific section at the end called "### 💡 Master's Tip" with an advanced insight.
+    6. 🛤️ **Next Steps**: Briefly suggest what they should learn or try next.
+    
+    Style: Be highly encouraging, sophisticated, and incredibly helpful. Make the student feel like they just unlocked a superpower.`;
+
+    return this._callApi(prompt, `Assistant Chat (${mode})`);
+  }
+
   async learningChat(message, conversationHistory = []) {
     const historyContext = conversationHistory.length > 0
       ? `Previous conversation:\n${conversationHistory.map(h => `${h.role}: ${h.content}`).join('\n')}\n\n`
@@ -322,6 +357,68 @@ Please provide a helpful response that:
 Remember: You're not just answering questions, you're helping someone learn and grow as a developer. Make learning enjoyable and accessible!`;
 
     return this._callApi(prompt, 'Learning Chat');
+  }
+
+  async generatePracticeProblem(skillLevel = 'beginner', topic = 'javascript') {
+    const prompt = `As an expert coding instructor, generate a practice problem for a ${skillLevel} student learning ${topic}.
+    
+    IMPORTANT: Provide your response ONLY as a JSON object. No other text.
+    
+    Format:
+    {
+      "title": "Problem Title",
+      "description": "Clear description of the challenge",
+      "difficulty": "Easy", "Medium", or "Hard",
+      "starting_code": "Optional initial code setup",
+      "test_cases": [{"input": "...", "expected": "..."}],
+      "solution": "Sample correct solution code",
+      "hints": ["Hint 1", "Hint 2"],
+      "topic": "${topic}"
+    }
+    
+    Ensure the challenge is engaging and helps reinforce key concepts.`;
+
+    const response = await this._callApi(prompt, 'Generate Practice Problem');
+    try {
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      return jsonMatch ? JSON.parse(jsonMatch[0]) : { error: 'Failed to parse problem' };
+    } catch (e) {
+      console.error('Failed to parse practice problem JSON:', e);
+      return { error: 'Invalid JSON format', raw: response };
+    }
+  }
+
+  async getLearningInsights(userData) {
+    const prompt = `Analyze the following user progress data and provide personalized learning insights:
+    
+    User Data: ${JSON.stringify(userData)}
+    
+    IMPORTANT: Provide your response ONLY as a JSON object. No other text.
+    
+    Format:
+    {
+      "strengths": ["string"],
+      "weaknesses": ["string"],
+      "recommendations": [
+        {
+          "title": "string",
+          "reason": "string",
+          "estimatedTime": "string"
+        }
+      ],
+      "overallProgress": number (0-100),
+      "completionEstimate": "string"
+    }
+    `;
+
+    const response = await this._callApi(prompt, 'Get Learning Insights');
+    try {
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      return jsonMatch ? JSON.parse(jsonMatch[0]) : { error: 'Failed to parse insights' };
+    } catch (e) {
+      console.error('Failed to parse learning insights JSON:', e);
+      return { error: 'Invalid JSON format', raw: response };
+    }
   }
 }
 

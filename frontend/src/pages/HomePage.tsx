@@ -1,708 +1,529 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store/store';
 import Button from '../components/shared/Button';
 import Card from '../components/shared/Card';
+import {
+  Zap,
+  Code2,
+  Cpu,
+  LineChart,
+  ShieldCheck,
+  Sparkles,
+  ArrowRight,
+  Lock,
+  Moon,
+  Sun,
+  ChevronRight,
+  Monitor,
+  Terminal,
+  BrainCircuit,
+  Globe,
+  Users,
+  MousePointer2,
+  Database,
+  Layers,
+  CheckCircle2,
+  Network
+} from 'lucide-react';
 
 const HomePage: React.FC = () => {
-  const [isDark, setIsDark] = useState(false);
+  const navigate = useNavigate();
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const [isDark, setIsDark] = useState(true);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    // Check system preference or localStorage
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
 
-    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+      setIsDark(false);
+      document.documentElement.classList.remove('dark');
+    } else {
       setIsDark(true);
       document.documentElement.classList.add('dark');
     }
+
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const toggleTheme = () => {
-    setIsDark(!isDark);
-    if (isDark) {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    } else {
+    const newTheme = !isDark;
+    setIsDark(newTheme);
+    if (newTheme) {
       document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
     }
   };
-  const features = [
-    {
-      icon: (
-        <svg className="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-      ),
-      title: 'AI-Powered Learning',
-      description: 'Get personalized explanations, code optimization, and debugging assistance from our advanced AI.',
-    },
-    {
-      icon: (
-        <svg className="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-        </svg>
-      ),
-      title: 'Interactive Playground',
-      description: 'Write, test, and experiment with code in our Monaco-powered editor with real-time AI assistance.',
-    },
-    {
-      icon: (
-        <svg className="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-      ),
-      title: 'Progress Tracking',
-      description: 'Monitor your learning journey with detailed analytics and skill progression charts.',
-    },
-    {
-      icon: (
-        <svg className="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-        </svg>
-      ),
-      title: 'Project-Based Learning',
-      description: 'Build real projects with guided tutorials and collaborate with other developers.',
-    },
-  ];
+
+  const handleAction = (path: string) => {
+    navigate(path);
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-secondary-50 dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-100 transition-colors duration-500 selection:bg-indigo-500/30 font-inter overflow-x-hidden">
+      {/* Dynamic Background System */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        {/* Animated Orbs */}
+        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-indigo-500/10 dark:bg-indigo-600/15 rounded-full blur-[120px] animate-blob"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-purple-500/10 dark:bg-purple-600/15 rounded-full blur-[120px] animate-blob" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-[20%] right-[10%] w-[40%] h-[40%] bg-blue-500/5 dark:bg-cyan-600/10 rounded-full blur-[100px] animate-blob" style={{ animationDelay: '4s' }}></div>
+
+        {/* Subtle Canvas Pattern */}
+        <div className="absolute inset-0 opacity-[0.05] dark:opacity-[0.1]" style={{
+          backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)',
+          backgroundSize: '32px 32px'
+        }}></div>
+      </div>
+
       {/* Navigation */}
-      <nav className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b border-slate-200 dark:border-slate-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-2">
-              <div className="h-8 w-8 bg-gradient-to-r from-primary-600 to-secondary-600 rounded-lg flex items-center justify-center">
-                <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <span className="text-xl font-bold text-slate-900 dark:text-white">FlowState</span>
+      <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'backdrop-blur-xl bg-white/70 dark:bg-[#020617]/80 border-b border-slate-200/50 dark:border-white/5 py-3 shadow-xl' : 'py-6'}`}>
+        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
+          <div className="flex items-center gap-3 group cursor-pointer" onClick={() => navigate('/')}>
+            <div className="p-2.5 bg-gradient-to-tr from-indigo-600 to-purple-600 rounded-xl shadow-lg shadow-indigo-500/20 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+              <Zap className="w-5 h-5 text-white fill-white" />
             </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                aria-label="Toggle theme"
-              >
-                {isDark ? (
-                  <svg className="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                ) : (
-                  <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                  </svg>
-                )}
-              </button>
-              <Link to="/auth/login">
-                <Button variant="ghost">Sign In</Button>
-              </Link>
-              <Link to="/auth/signup">
-                <Button variant="primary">Get Started</Button>
-              </Link>
-            </div>
+            <span className="text-2xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900 dark:from-white dark:via-slate-300 dark:to-white">
+              FLOWSTATE
+            </span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <button
+              onClick={toggleTheme}
+              className="p-3 rounded-full hover:bg-slate-200 dark:hover:bg-white/5 transition-colors text-slate-600 dark:text-slate-400"
+            >
+              {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+
+            <div className="h-6 w-px bg-slate-200 dark:bg-white/10 mx-2 hidden sm:block"></div>
+
+            <Link to="/auth/login" className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-white font-bold transition-colors hidden sm:block">
+              Login
+            </Link>
+            <Button onClick={() => navigate('/auth/signup')} className="rounded-full px-8 py-2.5 font-black shadow-2xl shadow-indigo-500/20 border-0 bg-indigo-600 hover:bg-indigo-500 text-white">
+              Get Started
+            </Button>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        {/* Background Gradient Blobs */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full z-0 pointer-events-none">
-          <div className="absolute top-20 left-1/4 w-72 h-72 bg-primary-400/20 rounded-full blur-3xl animate-blob"></div>
-          <div className="absolute bottom-20 right-1/4 w-96 h-96 bg-secondary-400/20 rounded-full blur-3xl animate-blob" style={{ animationDelay: '2s' }}></div>
-          <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-purple-400/20 rounded-full blur-3xl animate-blob" style={{ animationDelay: '4s' }}></div>
-        </div>
+      <section className="relative pt-40 pb-24 px-6">
+        <div className="max-w-7xl mx-auto text-center relative z-10">
+          <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-[10px] font-black tracking-[0.2em] text-indigo-600 dark:text-indigo-400 mb-10 animate-fade-in shadow-sm uppercase">
+            <Network className="w-4 h-4" />
+            <span>Distributed Neural Learning Framework</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></div>
+          </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto text-center">
-          <div className="animate-fade-in">
-            <span className="inline-block py-1 px-3 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-300 text-sm font-semibold mb-6 border border-primary-200 dark:border-primary-800">
-              🚀 AI-Powered Learning Evolution
+          <h1 className="text-5xl md:text-8xl font-black tracking-tight leading-[0.85] mb-10 animate-fade-in">
+            <span className="block text-slate-900 dark:text-white mb-2">CODE AT THE</span>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400">
+              SPEED OF LIGHT
             </span>
-            <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 dark:text-white mb-8 tracking-tight leading-tight">
-              Master Coding with <br className="hidden md:block" />
-              <span className="bg-gradient-to-r from-primary-600 via-purple-600 to-secondary-600 bg-clip-text text-transparent animate-gradient-x">
-                Intelligent AI Guidance
-              </span>
-            </h1>
-            <p className="text-xl md:text-2xl text-slate-600 dark:text-slate-300 mb-10 max-w-3xl mx-auto leading-relaxed">
-              FlowState combines personalized AI mentorship with an interactive playground to help you
-              <span className="text-primary-600 dark:text-primary-400 font-semibold"> learn faster</span>,
-              <span className="text-purple-600 dark:text-purple-400 font-semibold"> code better</span>, and
-              <span className="text-secondary-600 dark:text-secondary-400 font-semibold"> build smarter</span>.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-5 justify-center">
-              <Link to="/auth/signup">
-                <Button size="lg" className="w-full sm:w-auto shadow-xl shadow-primary-500/20 hover:shadow-primary-500/40 transform hover:-translate-y-1 hover:scale-105 active:scale-95 transition-all duration-300 text-lg px-8 py-4">
-                  Start Learning Free
-                </Button>
-              </Link>
-              <Button variant="secondary" size="lg" className="w-full sm:w-auto hover:bg-white dark:hover:bg-slate-800 border-2 text-lg px-8 py-4 hover:scale-105 active:scale-95 transition-all duration-300">
-                View Interactive Demo
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
+          </h1>
 
-      {/* Live Code Preview */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
-        <div className="relative max-w-5xl mx-auto">
-          {/* Decorative Glow */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-primary-600 to-purple-600 rounded-2xl blur opacity-20 dark:opacity-40 animate-pulse-slow"></div>
+          <p className="text-base md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-16 leading-relaxed animate-fade-in font-medium" style={{ animationDelay: '0.1s' }}>
+            Elevate your engineering potential with FlowState. A hyper-integrated ecosystem
+            designed for the architects of the next-generation digital frontier.
+            Pair-program with neural agents, deploy cloud GPUs, and master complex systems.
+          </p>
 
-          <Card className="relative p-8 border-0 ring-1 ring-slate-900/5 dark:ring-white/10 shadow-2xl backdrop-blur-xl bg-white/90 dark:bg-slate-900/90 animate-float">
-            <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 text-center">
-              <span className="mr-2">✨</span> Experience Next-Gen Coding
-            </h3>
-            <div className="bg-[#1a1b26] rounded-xl p-6 font-mono text-sm shadow-inner overflow-hidden relative group">
-              {/* Window Controls */}
-              <div className="flex gap-2 mb-4">
-                <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
-                <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-                <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
-              </div>
-
-              <div className="text-slate-500 mb-2 italic">{'// Explain this complex logic in plain English'}</div>
-              <div className="text-purple-300">
-                <span className="text-blue-400">function</span>
-                <span className="text-yellow-300"> optimizeNetwork</span>
-                <span className="text-slate-300">(</span>
-                <span className="text-orange-300">graph</span>
-                <span className="text-slate-300">) {'{'}</span>
-              </div>
-              <div className="ml-4 text-slate-300">
-                <div className="border-l-2 border-slate-700 pl-4 py-1">
-                  <span className="text-cyan-400">const</span> nodes = graph.
-                  <span className="text-blue-300">getAllNodes</span>();
-                </div>
-                <div>
-                  <span className="text-purple-400">return</span> nodes.
-                  <span className="text-blue-300">reduce</span>((acc, node) {'=>'} ...);
-                </div>
-              </div>
-              <div className="text-slate-300">{'}'}</div>
-            </div>
-
-            <div className="mt-6 p-5 bg-gradient-to-r from-primary-50 to-white dark:from-slate-800 dark:to-slate-800/50 rounded-xl border border-primary-100 dark:border-slate-700 transform transition-all duration-500 translate-y-2 opacity-0 animate-slide-up" style={{ animationDelay: '0.5s', animationFillMode: 'forwards' }}>
-              <div className="flex gap-3">
-                <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/50 flex items-center justify-center text-primary-600 dark:text-primary-400">
-                  🤖
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white mb-1">
-                    AI Analysis Result
-                  </p>
-                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                    This function attempts to optimize a graph network. However, using <code className="text-red-500 bg-red-50 dark:bg-red-900/20 px-1 rounded">getAllNodes()</code> might be memory intensive for large datasets. Consider using a generator or streaming approach for O(1) space complexity.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </section>
-
-      {/* Real-time AI Mentorship Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-900 dark:bg-slate-950">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-white mb-4">
-              Real-time AI Mentorship
-            </h2>
-            <p className="text-xl text-slate-300">
-              Get instant code explanations, debugging tips, and architectural advice as you type
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            {/* Code Editor Mock */}
-            <div className="bg-slate-800 rounded-xl overflow-hidden shadow-2xl border border-slate-700">
-              {/* Editor Header */}
-              <div className="bg-slate-900 px-4 py-2 flex items-center space-x-2 border-b border-slate-700">
-                <div className="flex space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                </div>
-                <span className="text-slate-400 text-sm ml-4">App.js</span>
-              </div>
-
-              {/* Code Content */}
-              <div className="p-6 font-mono text-sm">
-                <div className="space-y-2">
-                  <div className="flex">
-                    <span className="text-slate-500 w-8">1</span>
-                    <span className="text-purple-400">const</span>
-                    <span className="text-white"> fetchData = </span>
-                    <span className="text-blue-400">async</span>
-                    <span className="text-white"> () =&gt; {'{'}</span>
-                  </div>
-                  <div className="flex">
-                    <span className="text-slate-500 w-8">2</span>
-                    <span className="text-white ml-4">  </span>
-                    <span className="text-purple-400">try</span>
-                    <span className="text-white"> {'{'}</span>
-                  </div>
-                  <div className="flex">
-                    <span className="text-slate-500 w-8">3</span>
-                    <span className="text-white ml-8">    </span>
-                    <span className="text-purple-400">const</span>
-                    <span className="text-white"> res = </span>
-                    <span className="text-blue-400">await</span>
-                    <span className="text-white"> </span>
-                    <span className="text-yellow-400">fetch</span>
-                    <span className="text-white">(</span>
-                    <span className="text-green-400">'/api/data'</span>
-                    <span className="text-white">);</span>
-                  </div>
-                  <div className="flex">
-                    <span className="text-slate-500 w-8">4</span>
-                    <span className="text-white ml-8">    </span>
-                    <span className="text-purple-400">const</span>
-                    <span className="text-white"> data = </span>
-                    <span className="text-blue-400">await</span>
-                    <span className="text-white"> res.</span>
-                    <span className="text-yellow-400">json</span>
-                    <span className="text-white">();</span>
-                  </div>
-                  <div className="flex">
-                    <span className="text-slate-500 w-8">5</span>
-                    <span className="text-white ml-8">    </span>
-                    <span className="text-yellow-400">setData</span>
-                    <span className="text-white">(data);</span>
-                  </div>
-                  <div className="flex">
-                    <span className="text-slate-500 w-8">6</span>
-                    <span className="text-white ml-4">  {'}'} </span>
-                    <span className="text-purple-400">catch</span>
-                    <span className="text-white"> (err) {'{'}</span>
-                  </div>
-                  <div className="flex">
-                    <span className="text-slate-500 w-8">7</span>
-                    <span className="text-white ml-8">    console.</span>
-                    <span className="text-yellow-400">error</span>
-                    <span className="text-white">(err);</span>
-                  </div>
-                  <div className="flex">
-                    <span className="text-slate-500 w-8">8</span>
-                    <span className="text-white ml-4">  {'}'}</span>
-                  </div>
-                  <div className="flex">
-                    <span className="text-slate-500 w-8">9</span>
-                    <span className="text-white">{'}'}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* AI Explanation Panel */}
-            <div className="bg-slate-800 rounded-xl p-6 shadow-2xl border border-slate-700">
-              <div className="flex items-center space-x-2 mb-4">
-                <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-                <h3 className="text-xl font-bold text-white">AI EXPLANATION</h3>
-              </div>
-
-              <div className="space-y-4 text-slate-300">
-                <p className="leading-relaxed">
-                  "On line 4, we are parsing the response stream into a JSON object.
-                  Using <span className="text-blue-400 font-mono">await</span> here is critical because{' '}
-                  <span className="text-yellow-400 font-mono">res.json()</span> returns a Promise."
-                </p>
-
-                <div className="bg-slate-900 rounded-lg p-4 border-l-4 border-blue-500">
-                  <p className="text-sm text-slate-400 mb-2">💡 TIP</p>
-                  <p className="text-sm">
-                    Consider adding a loading state before starting the fetch request to improve UX.
-                  </p>
-                </div>
-
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
-                  Refactor This Block
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Learn by Doing Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-900 dark:bg-slate-950">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left Content */}
-            <div>
-              <h2 className="text-4xl font-bold text-white mb-4">
-                Learn by Doing.
-              </h2>
-              <h3 className="text-4xl font-bold text-cyan-400 mb-6">
-                In the Cloud.
-              </h3>
-              <p className="text-xl text-slate-300 mb-8">
-                Don't just watch videos. Code alongside experts in our pre-configured Jupyter environments with GPU acceleration included.
-              </p>
-
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center mt-1">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="text-white font-semibold text-lg">Zero-config GPU workspaces</h4>
-                    <p className="text-slate-400">Start coding immediately with pre-configured environments</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center mt-1">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="text-white font-semibold text-lg">Interactive code reviews by AI mentors</h4>
-                    <p className="text-slate-400">Get instant feedback on your code quality and style</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center mt-1">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 className="text-white font-semibold text-lg">Real-world dataset access</h4>
-                    <p className="text-slate-400">Work with actual data from industry projects</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right - Code Editor Mock */}
-            <div className="bg-slate-800 rounded-xl overflow-hidden shadow-2xl border border-slate-700">
-              {/* Editor Header */}
-              <div className="bg-slate-900 px-4 py-2 flex items-center space-x-2 border-b border-slate-700">
-                <div className="flex space-x-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                </div>
-                <span className="text-slate-400 text-sm ml-4">trainer.py</span>
-              </div>
-
-              {/* Code Content */}
-              <div className="p-6 font-mono text-sm">
-                <div className="space-y-2">
-                  <div className="flex">
-                    <span className="text-slate-500 w-8">1</span>
-                    <span className="text-purple-400">import</span>
-                    <span className="text-white"> torch</span>
-                  </div>
-                  <div className="flex">
-                    <span className="text-slate-500 w-8">2</span>
-                    <span className="text-purple-400">from</span>
-                    <span className="text-white"> transformers </span>
-                    <span className="text-purple-400">import</span>
-                    <span className="text-white"> Trainer</span>
-                  </div>
-                  <div className="flex">
-                    <span className="text-slate-500 w-8">3</span>
-                    <span className="text-slate-600"># Configure architecture</span>
-                  </div>
-                  <div className="flex">
-                    <span className="text-slate-500 w-8">4</span>
-                    <span className="text-white">model = </span>
-                  </div>
-                  <div className="flex">
-                    <span className="text-slate-500 w-8">5</span>
-                    <span className="text-white ml-4">  </span>
-                    <span className="text-cyan-400">AutoModelForCausalLM</span>
-                    <span className="text-white">.</span>
-                    <span className="text-yellow-400">from_pretrained</span>
-                    <span className="text-white">(</span>
-                  </div>
-                  <div className="flex">
-                    <span className="text-slate-500 w-8">6</span>
-                    <span className="text-white ml-8">    </span>
-                    <span className="text-green-400">"academy-base-v1"</span>
-                    <span className="text-white">, device_map=</span>
-                    <span className="text-green-400">"auto"</span>
-                  </div>
-                  <div className="flex">
-                    <span className="text-slate-500 w-8">7</span>
-                    <span className="text-white ml-4">  )</span>
-                  </div>
-                  <div className="flex">
-                    <span className="text-slate-500 w-8">8</span>
-                    <span className="text-white"></span>
-                  </div>
-                  <div className="flex">
-                    <span className="text-slate-500 w-8">9</span>
-                    <span className="text-white">trainer.</span>
-                    <span className="text-yellow-400">train</span>
-                    <span className="text-white">()</span>
-                  </div>
-                </div>
-
-                {/* Compiling Status */}
-                <div className="mt-6 bg-slate-900 rounded-lg p-3 border border-cyan-500/30">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
-                    <span className="text-cyan-400 text-xs">COMPILING...</span>
-                    <span className="text-slate-500 text-xs ml-auto">Avg Latency</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Community Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-900 dark:bg-slate-950">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-white mb-4">
-              Built by the Community.
-            </h2>
-            <h3 className="text-4xl font-bold text-cyan-400 mb-6">
-              Free for Everyone.
-            </h3>
-            <p className="text-xl text-slate-300 max-w-3xl mx-auto">
-              We believe that high-quality coding education should be a universal right.
-              Our platform is an open-source initiative supported by thousands of developers worldwide.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {/* Stats Cards */}
-            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-              <div className="text-4xl font-bold text-white mb-2">45k+</div>
-              <div className="text-slate-400">Active Learners</div>
-            </div>
-
-            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-              <div className="text-4xl font-bold text-white mb-2">100%</div>
-              <div className="text-slate-400">Free Content</div>
-            </div>
-
-            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 flex flex-col items-center justify-center">
-              <svg className="w-12 h-12 text-cyan-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-              </svg>
-              <div className="text-slate-400 text-center">OPEN SOURCE</div>
-            </div>
-
-            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 flex flex-col items-center justify-center">
-              <svg className="w-12 h-12 text-cyan-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-              <div className="text-slate-400 text-center">NON-PROFIT</div>
-            </div>
-
-            <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 flex flex-col items-center justify-center">
-              <svg className="w-12 h-12 text-cyan-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              <div className="text-slate-400 text-center">COLLABORATIVE</div>
-            </div>
-          </div>
-
-          <div className="text-center">
-            <button className="inline-flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 text-white px-6 py-3 rounded-lg border border-slate-700 transition-colors">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-              </svg>
-              <span>Join the Global Discord Community</span>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <button
+              onClick={() => handleAction('/auth/signup')}
+              className="group relative flex items-center gap-4 bg-slate-900 dark:bg-white text-white dark:text-slate-950 px-12 py-5 rounded-2xl font-black text-xl hover:scale-105 active:scale-95 transition-all shadow-[0_20px_60px_rgba(0,0,0,0.2)] dark:shadow-[0_20px_60px_rgba(255,255,255,0.05)]"
+            >
+              <Zap className="w-6 h-6 fill-current text-indigo-500" />
+              START FREE TRIAL
+              <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+            </button>
+            <button
+              onClick={() => handleAction('/auth/login')}
+              className="px-12 py-5 rounded-2xl border-2 border-slate-200 dark:border-white/10 font-black text-xl hover:bg-slate-100 dark:hover:bg-white/5 transition-all text-slate-600 dark:text-slate-400"
+            >
+              LOG-IN
             </button>
           </div>
         </div>
+
+        {/* Cinematic Preview Section */}
+        <div className="max-w-6xl mx-auto mt-32 perspective-1000 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+          <div className="relative group rounded-[3rem] overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rotate-x-12 animate-tilt shadow-2xl">
+            {/* System Bar */}
+            <div className="bg-slate-100 dark:bg-slate-800/80 px-8 py-4 flex items-center justify-between border-b border-slate-200 dark:border-white/5">
+              <div className="flex gap-2.5">
+                <div className="w-3.5 h-3.5 rounded-full bg-rose-500/90 shadow-lg shadow-rose-500/20"></div>
+                <div className="w-3.5 h-3.5 rounded-full bg-amber-500/90 shadow-lg shadow-amber-500/20"></div>
+                <div className="w-3.5 h-3.5 rounded-full bg-emerald-500/90 shadow-lg shadow-emerald-500/20"></div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="h-2 w-32 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-full bg-indigo-500 w-2/3 animate-pulse"></div>
+                </div>
+                <div className="text-[9px] font-black font-mono text-slate-400 tracking-widest uppercase">Encryption: AES-256-GCM</div>
+              </div>
+            </div>
+
+            <div className="aspect-[21/10] flex items-center justify-center relative bg-slate-50 dark:bg-[#01040f]">
+              {/* Visual Grid Mockup */}
+              <div className="absolute inset-0 grid grid-cols-6 grid-rows-4 gap-6 p-8 opacity-20 dark:opacity-40">
+                <div className="col-span-2 row-span-2 bg-slate-300 dark:bg-white/5 rounded-3xl backdrop-blur-sm"></div>
+                <div className="col-span-4 row-span-1 bg-slate-300 dark:bg-white/5 rounded-3xl backdrop-blur-sm"></div>
+                <div className="col-span-1 row-span-3 bg-slate-300 dark:bg-white/5 rounded-3xl backdrop-blur-sm"></div>
+                <div className="col-span-3 row-span-3 bg-slate-300 dark:bg-white/5 rounded-3xl backdrop-blur-sm"></div>
+              </div>
+
+              {/* Authentication Lockout Interface */}
+              <div className="relative z-20 flex flex-col items-center justify-center p-12 glass-premium rounded-[3.5rem] shadow-[0_0_80px_rgba(79,70,229,0.3)]">
+                <div className="w-24 h-24 rounded-[2rem] bg-slate-900 dark:bg-white flex items-center justify-center mb-8 shadow-2xl animate-float">
+                  <Lock className="w-10 h-10 text-white dark:text-indigo-600" />
+                </div>
+                <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-4 tracking-tighter uppercase italic">Protected Workspace</h3>
+                <p className="text-slate-600 dark:text-slate-400 font-bold tracking-[0.2em] uppercase text-xs mb-10 text-center max-w-sm">
+                  Enter your credentials to initialize neural handshake and unlock the full learning suite.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-4 w-full">
+                  <button onClick={() => navigate('/auth/login')} className="flex-1 bg-indigo-600 text-white font-black py-4 rounded-2xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20 px-8">LOGIN NOW</button>
+                  <button onClick={() => navigate('/auth/signup')} className="flex-1 bg-white/10 dark:bg-white/5 border border-white/20 dark:border-white/10 text-slate-900 dark:text-white font-black py-4 rounded-2xl hover:bg-white/20 transition-all px-8">REGISTER</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
-      {/* Features Grid */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-              Everything You Need to Excel
-            </h2>
-            <p className="text-lg text-slate-600 dark:text-slate-300">
-              Comprehensive tools and features designed for modern developers
+      {/* Global Impact Section */}
+      <section className="relative py-40 px-6 border-y border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#030712] overflow-hidden">
+        {/* Section Local Background Blobs */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-4xl opacity-20 dark:opacity-40 pointer-events-none">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-indigo-600 rounded-full blur-[120px] animate-blob"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-600 rounded-full blur-[120px] animate-blob" style={{ animationDelay: '3s' }}></div>
+        </div>
+
+        {/* Subtle Grid for this section */}
+        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.07] pointer-events-none" style={{
+          backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)',
+          backgroundSize: '40px 40px'
+        }}></div>
+
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-16 relative z-10">
+          <div className="flex-1 space-y-10">
+            <div className="space-y-4">
+              <div className="w-12 h-1 bg-indigo-600 rounded-full"></div>
+              <h2 className="text-4xl md:text-6xl font-black tracking-tighter leading-[0.9] uppercase italic">
+                A Global Network of <br />
+                <span className="text-indigo-600 dark:text-indigo-400">Elite Engineers</span>
+              </h2>
+            </div>
+
+            <p className="text-lg text-slate-500 dark:text-slate-400 font-medium max-w-xl leading-relaxed">
+              Our infrastructure spans 24 regions, providing low-latency cognitive synchronization
+              for thousands of architects worldwide.
             </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
-              <Card
-                key={index}
-                className="text-center group hover:-translate-y-2 hover:shadow-xl transition-all duration-300 border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm"
-              >
-                <div className="flex justify-center mb-6">
-                  <div className="p-3 bg-primary-50 dark:bg-primary-900/30 rounded-2xl group-hover:bg-primary-100 dark:group-hover:bg-primary-900/50 transition-colors duration-300 group-hover:animate-bounce-slow">
-                    {feature.icon}
-                  </div>
+
+            <div className="grid grid-cols-2 gap-10">
+              {[
+                { label: "Daily Executions", value: "1.2M+" },
+                { label: "Active Nodes", value: "48,201" },
+                { label: "Cloud Regions", value: "24" },
+                { label: "Auth Efficiency", value: "99.9%" }
+              ].map((stat, i) => (
+                <div key={i} className="group cursor-default">
+                  <p className="text-3xl font-black group-hover:text-indigo-500 transition-colors duration-500">{stat.value}</p>
+                  <p className="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase mt-2">{stat.label}</p>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
-                  {feature.title}
-                </h3>
-                <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
-                  {feature.description}
-                </p>
-              </Card>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex-1 grid grid-cols-2 gap-6 relative">
+            {/* Decorative lines connecting cards */}
+            <div className="absolute inset-0 translate-y-8 translate-x-4 pointer-events-none">
+              <div className="w-full h-full border border-indigo-500/10 rounded-[3rem] animate-pulse"></div>
+            </div>
+
+            <div className="space-y-6 translate-y-12">
+              <div className="p-10 space-y-6 glass-premium h-72 flex flex-col justify-center items-center rounded-[2.5rem] hover:-translate-y-2 hover:shadow-indigo-500/20 hover:border-indigo-500/30 transition-all duration-500 group cursor-pointer border-white/10">
+                <div className="p-4 rounded-2xl bg-indigo-500/10 group-hover:bg-indigo-500/20 transition-colors">
+                  <Globe className="w-10 h-10 text-indigo-500 group-hover:scale-110 transition-transform" />
+                </div>
+                <p className="font-black text-center text-sm uppercase tracking-[0.2em] leading-relaxed">Latency-Free<br />Syncronization</p>
+              </div>
+              <div className="p-10 space-y-6 glass-premium h-72 flex flex-col justify-center items-center rounded-[2.5rem] hover:-translate-y-2 hover:shadow-purple-500/20 hover:border-purple-500/30 transition-all duration-500 group cursor-pointer border-white/10">
+                <div className="p-4 rounded-2xl bg-purple-500/10 group-hover:bg-purple-500/20 transition-colors">
+                  <Users className="w-10 h-10 text-purple-500 group-hover:scale-110 transition-transform" />
+                </div>
+                <p className="font-black text-center text-sm uppercase tracking-[0.2em] leading-relaxed">Collaborative<br />Intelligence</p>
+              </div>
+            </div>
+            <div className="space-y-6">
+              <div className="p-10 space-y-6 glass-premium h-72 flex flex-col justify-center items-center rounded-[2.5rem] hover:-translate-y-2 hover:shadow-emerald-500/20 hover:border-emerald-500/30 transition-all duration-500 group cursor-pointer border-white/10">
+                <div className="p-4 rounded-2xl bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors">
+                  <ShieldCheck className="w-10 h-10 text-emerald-500 group-hover:scale-110 transition-transform" />
+                </div>
+                <p className="font-black text-center text-sm uppercase tracking-[0.2em] leading-relaxed">Military Grade<br />Security</p>
+              </div>
+              <div className="p-10 space-y-6 glass-premium h-72 flex flex-col justify-center items-center rounded-[2.5rem] hover:-translate-y-2 hover:shadow-cyan-500/20 hover:border-cyan-500/30 transition-all duration-500 group cursor-pointer border-white/10">
+                <div className="p-4 rounded-2xl bg-cyan-500/10 group-hover:bg-cyan-500/20 transition-colors">
+                  <BrainCircuit className="w-10 h-10 text-cyan-500 group-hover:scale-110 transition-transform" />
+                </div>
+                <p className="font-black text-center text-sm uppercase tracking-[0.2em] leading-relaxed">Self-Evolving<br />Curriculum</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Roadmap Section */}
+      <section className="py-32 px-6">
+        <div className="max-w-4xl mx-auto text-center mb-20">
+          <h2 className="text-4xl md:text-5xl font-black mb-6 uppercase tracking-tighter">Your Neural Evolution</h2>
+          <p className="text-base text-slate-500 dark:text-slate-400 font-medium">From authentication to architectural mastery. The FlowState journey is systematic and proven.</p>
+        </div>
+
+        <div className="max-w-5xl mx-auto space-y-12 relative">
+          {/* Vertical Line */}
+          <div className="absolute top-0 bottom-0 left-8 md:left-1/2 w-0.5 bg-gradient-to-b from-indigo-500 via-purple-500 to-transparent opacity-20"></div>
+
+          {[
+            {
+              step: "01",
+              title: "Initialization",
+              desc: "Register your secure account and initialize your learning persona. Gain immediate access to the public infrastructure.",
+              icon: <MousePointer2 className="w-6 h-6" />
+            },
+            {
+              step: "02",
+              title: "Cognitive Sync",
+              desc: "Complete our baseline assessment. Our neural agents map your current strengths and architect a 1:1 learning path.",
+              icon: <Database className="w-6 h-6" />
+            },
+            {
+              step: "03",
+              title: "Hyper-Focus Mode",
+              desc: "Engage with the Polyglot Playground. Real-time debugging and AI-pair programming for rapid feedback loops.",
+              icon: <Terminal className="w-6 h-6" />
+            },
+            {
+              step: "04",
+              title: "Mastery Unlock",
+              desc: "Build production-ready projects in our cloud environments. Earn cryptographically verified certifications.",
+              icon: <CheckCircle2 className="w-6 h-6" />
+            }
+          ].map((item, i) => (
+            <div key={i} className={`flex flex-col md:flex-row items-center gap-12 relative ${i % 2 === 0 ? '' : 'md:flex-row-reverse'}`}>
+              <div className="flex-1">
+                <div className="p-10 group glass-premium hover:border-indigo-500/50 transition-all duration-500 rounded-3xl">
+                  <div className="flex items-center gap-4 mb-6">
+                    <span className="text-3xl font-black text-indigo-400 group-hover:text-indigo-500 transition-colors">{item.step}</span>
+                    <h3 className="text-2xl font-black uppercase tracking-tight">{item.title}</h3>
+                  </div>
+                  <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">{item.desc}</p>
+                </div>
+              </div>
+              <div className="w-16 h-16 rounded-full bg-slate-900 dark:bg-white flex items-center justify-center relative z-10 shadow-2xl">
+                <div className="text-white dark:text-indigo-600">{item.icon}</div>
+              </div>
+              <div className="flex-1 hidden md:block"></div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Engineering Modules Section */}
+      <section className="py-40 px-6 relative bg-white dark:bg-[#020617]">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-end justify-between mb-24 gap-8">
+            <div className="max-w-2xl space-y-6">
+              <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase italic leading-[0.85]">
+                CORE<br />
+                <span className="text-indigo-600 dark:text-indigo-500">CURRICULUM</span>
+              </h2>
+              <p className="text-lg text-slate-500 font-medium">Four pillars of mastery. Each node contains hundreds of neural-mapped lessons and simulated environments.</p>
+            </div>
+            <div className="pb-4">
+              <div className="flex items-center gap-4 text-xs font-black tracking-[0.3em] uppercase text-slate-400">
+                <span>SCROLL TO EXPLORE</span>
+                <div className="w-12 h-px bg-slate-200 dark:bg-white/10"></div>
+                <ChevronRight className="w-4 h-4 animate-bounce-x" />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { title: "Neural Logic", tag: "AI / ML", desc: "Master the foundations of transformers, neural networks, and prompt engineering.", icon: <BrainCircuit className="w-8 h-8" />, color: "blue" },
+              { title: "Synthesized Web", tag: "Frontend", desc: "Build impossible interfaces with React, Three.js, and advanced motion systems.", icon: <Layers className="w-8 h-8" />, color: "indigo" },
+              { title: "Grid Architecture", tag: "Backend", desc: "Scale to millions with microservices, distributed databases, and high-concurrency Node.js.", icon: <Database className="w-8 h-8" />, color: "purple" },
+              { title: "Machine Language", tag: "Low Level", desc: "Optimize at the edge with C++, Rust, and assembly-level cognitive patterns.", icon: <Cpu className="w-8 h-8" />, color: "cyan" }
+            ].map((module, i) => (
+              <div key={i} className="group glass-premium p-10 rounded-[2.5rem] border-white/10 hover:border-indigo-500/40 transition-all duration-700 hover:-translate-y-4 cursor-pointer min-h-[400px] flex flex-col justify-between">
+                <div className="space-y-6">
+                  <div className={`w-16 h-16 rounded-2xl bg-${module.color}-500/10 flex items-center justify-center text-${module.color}-500 transform group-hover:rotate-[360deg] transition-transform duration-1000`}>
+                    {module.icon}
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black tracking-[0.3em] uppercase text-slate-400">{module.tag}</span>
+                    <h3 className="text-2xl font-black uppercase mt-2 group-hover:text-indigo-500 transition-colors">{module.title}</h3>
+                  </div>
+                  <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">{module.desc}</p>
+                </div>
+                <div className="pt-8 border-t border-white/5 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-all">
+                  <span className="text-xs font-black tracking-widest uppercase">Explore Module</span>
+                  <ArrowRight className="w-5 h-5" />
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Statistics Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-800">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-slate-100 dark:divide-slate-800">
-            <div className="p-4 transform hover:scale-105 transition-transform duration-300">
-              <div className="text-5xl font-extrabold bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent mb-2 animate-pulse-slow">50K+</div>
-              <div className="font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider text-sm">Active Learners</div>
-            </div>
-            <div className="p-4 transform hover:scale-105 transition-transform duration-300">
-              <div className="text-5xl font-extrabold bg-gradient-to-r from-purple-600 to-purple-400 bg-clip-text text-transparent mb-2 animate-pulse-slow" style={{ animationDelay: '0.5s' }}>1M+</div>
-              <div className="font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider text-sm">Code Executions</div>
-            </div>
-            <div className="p-4 transform hover:scale-105 transition-transform duration-300">
-              <div className="text-5xl font-extrabold bg-gradient-to-r from-blue-600 to-cyan-400 bg-clip-text text-transparent mb-2 animate-pulse-slow" style={{ animationDelay: '1s' }}>500+</div>
-              <div className="font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider text-sm">Learning Paths</div>
-            </div>
-            <div className="p-4 transform hover:scale-105 transition-transform duration-300">
-              <div className="text-5xl font-extrabold bg-gradient-to-r from-green-500 to-emerald-400 bg-clip-text text-transparent mb-2 animate-pulse-slow" style={{ animationDelay: '1.5s' }}>98%</div>
-              <div className="font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider text-sm">Satisfaction Rate</div>
-            </div>
+      {/* Tech Stack Marquee (Static Alternative) */}
+      <section className="py-24 bg-slate-900 overflow-hidden relative">
+        <div className="absolute top-0 bottom-0 left-0 w-32 bg-gradient-to-r from-slate-900 to-transparent z-10"></div>
+        <div className="absolute top-0 bottom-0 right-0 w-32 bg-gradient-to-l from-slate-900 to-transparent z-10"></div>
+        <div className="flex items-center gap-24 whitespace-nowrap animate-scroll opacity-40">
+          {['REACT', 'TYPESCRIPT', 'PYTHON', 'NODE.JS', 'PYTORCH', 'DOCKER', 'KUBERNETES', 'MONGODB', 'EXPRESS', 'NEURAL ENGINE', 'GPU CLOUD'].map((tech, i) => (
+            <span key={i} className="text-4xl font-black text-white/50 tracking-[0.3em] font-mono">{tech}</span>
+          ))}
+          {/* Duplicate for seamless scroll */}
+          {['REACT', 'TYPESCRIPT', 'PYTHON', 'NODE.JS', 'PYTORCH', 'DOCKER', 'KUBERNETES', 'MONGODB', 'EXPRESS', 'NEURAL ENGINE', 'GPU CLOUD'].map((tech, i) => (
+            <span key={`dup-${i}`} className="text-4xl font-black text-white/50 tracking-[0.3em] font-mono">{tech}</span>
+          ))}
+        </div>
+      </section>
+
+      {/* Neural Pulse FAQ Section */}
+      <section className="py-40 px-6 bg-slate-50 dark:bg-[#01040f]">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-24 space-y-6">
+            <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase italic drop-shadow-sm">
+              NEURAL<br />
+              <span className="text-indigo-600 dark:text-indigo-500">PULSE</span>
+            </h2>
+            <p className="text-slate-500 font-bold tracking-[0.2em] uppercase text-xs">frequently initialized queries</p>
+          </div>
+
+          <div className="space-y-6">
+            {[
+              { q: "Is FlowState free to initialize?", a: "Yes, you can initialize your ID and access the basic curriculum without any cost. Advanced cloud GPU nodes require a pro-tier membership." },
+              { q: "How do the AI mentors work?", a: "Our AI agents are mapped to your specific cognitive patterns, providing real-time code reviews and architectural alternative suggestions as you build." },
+              { q: "Are the certifications industry-recognized?", a: "Every FlowState certification is cryptographically signed and verified on our node network, recognized by elite engineering teams globally." },
+              { q: "Can I use external cloud providers?", a: "FlowState is built to be provider-agnostic. You can sync your AWS, GCP, or Azure credentials to initialize external node clusters." }
+            ].map((faq, i) => (
+              <div key={i} className="group glass-premium p-8 rounded-[2rem] border-white/5 hover:border-indigo-500/20 transition-all cursor-pointer">
+                <div className="flex items-center justify-between gap-8">
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-bold group-hover:text-indigo-500 transition-colors uppercase tracking-tight">{faq.q}</h3>
+                    <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed max-w-2xl">{faq.a}</p>
+                  </div>
+                  <div className="w-12 h-12 rounded-full border border-white/10 flex items-center justify-center shrink-0 group-hover:bg-indigo-600 group-hover:border-indigo-600 transition-all">
+                    <ArrowRight className="w-5 h-5 rotate-45 group-hover:rotate-0 transition-transform" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-              Loved by Developers Worldwide
+      {/* Final Call to Action */}
+      <section className="py-40 px-6">
+        <div className="max-w-6xl mx-auto relative group overflow-hidden rounded-[4rem] bg-indigo-600 shadow-[0_50px_120px_rgba(79,70,229,0.4)]">
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-indigo-700 to-purple-800"></div>
+          <div className="absolute inset-0 opacity-10 mix-blend-overlay" style={{ backgroundImage: 'url("https://grainy-gradients.vercel.app/noise.svg")' }}></div>
+
+          <div className="relative z-10 p-16 md:p-32 text-center space-y-12">
+            <h2 className="text-5xl md:text-7xl font-black text-white leading-none tracking-tighter uppercase italic drop-shadow-2xl">
+              ASCEND THE<br />PYRAMID.
             </h2>
-            <p className="text-lg text-slate-600 dark:text-slate-300">
-              See what our community has to say
+            <p className="text-indigo-50 text-lg md:text-xl max-w-3xl mx-auto font-bold opacity-90 leading-relaxed">
+              Join the world's most proactive engineering community.
+              The future belongs to those who initialize first.
             </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+              <button
+                onClick={() => navigate('/auth/signup')}
+                className="bg-white text-indigo-700 px-16 py-7 rounded-3xl font-black text-2xl hover:scale-105 active:scale-95 transition-all shadow-3xl shadow-indigo-950/40 flex items-center gap-4"
+              >
+                GET STARTED
+                <ArrowRight className="w-8 h-8" />
+              </button>
+              <button
+                onClick={() => navigate('/auth/login')}
+                className="px-16 py-7 rounded-3xl border-2 border-white/30 text-white font-black text-2xl hover:bg-white/10 transition-all font-mono tracking-widest"
+              >
+                LOG-IN
+              </button>
+            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="p-6">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-primary-600 to-secondary-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                  S
-                </div>
-                <div className="ml-4">
-                  <div className="font-semibold text-slate-900 dark:text-white">Sarah Chen</div>
-                  <div className="text-sm text-slate-500 dark:text-slate-400">Full Stack Developer</div>
-                </div>
-              </div>
-              <p className="text-slate-600 dark:text-slate-300 italic">
-                "FlowState's AI assistant helped me understand complex algorithms in minutes. The interactive playground is a game-changer!"
-              </p>
-              <div className="flex mt-4 text-yellow-400">
-                {'★★★★★'.split('').map((star, i) => <span key={i}>{star}</span>)}
-              </div>
-            </Card>
-            <Card className="p-6">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-primary-600 to-secondary-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                  M
-                </div>
-                <div className="ml-4">
-                  <div className="font-semibold text-slate-900 dark:text-white">Marcus Johnson</div>
-                  <div className="text-sm text-slate-500 dark:text-slate-400">Software Engineer</div>
-                </div>
-              </div>
-              <p className="text-slate-600 dark:text-slate-300 italic">
-                "I went from beginner to landing my first dev job in 6 months. The project-based learning approach is incredibly effective."
-              </p>
-              <div className="flex mt-4 text-yellow-400">
-                {'★★★★★'.split('').map((star, i) => <span key={i}>{star}</span>)}
-              </div>
-            </Card>
-            <Card className="p-6">
-              <div className="flex items-center mb-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-primary-600 to-secondary-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                  A
-                </div>
-                <div className="ml-4">
-                  <div className="font-semibold text-slate-900 dark:text-white">Aisha Patel</div>
-                  <div className="text-sm text-slate-500 dark:text-slate-400">Data Scientist</div>
-                </div>
-              </div>
-              <p className="text-slate-600 dark:text-slate-300 italic">
-                "The AI code explanations are spot-on. It's like having a senior developer mentor available 24/7. Absolutely worth it!"
-              </p>
-              <div className="flex mt-4 text-yellow-400">
-                {'★★★★★'.split('').map((star, i) => <span key={i}>{star}</span>)}
-              </div>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-
-
-      {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <Card className="bg-gradient-to-r from-primary-600 to-secondary-600 text-white">
-            <h2 className="text-3xl font-bold mb-4">
-              Ready to Transform Your Coding Journey?
-            </h2>
-            <p className="text-xl mb-8 opacity-90">
-              Join thousands of developers who are learning faster and coding better with FlowState.
-            </p>
-            <Link to="/auth/signup">
-              <Button variant="secondary" size="lg">
-                Get Started Today
-              </Button>
-            </Link>
-          </Card>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-2 mb-4 md:mb-0">
-              <div className="h-8 w-8 bg-gradient-to-r from-primary-600 to-secondary-600 rounded-lg flex items-center justify-center">
-                <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <span className="text-xl font-bold text-slate-900 dark:text-white">FlowState</span>
+      <footer className="py-32 border-t border-slate-200 dark:border-white/5 px-6 bg-slate-50 dark:bg-slate-950">
+        <div className="max-w-7xl mx-auto text-center space-y-16">
+          <div className="flex flex-col items-center gap-8">
+            <div className="flex items-center gap-4">
+              <Zap className="w-8 h-8 text-indigo-600 dark:text-indigo-400 fill-current" />
+              <span className="text-3xl font-black tracking-tighter uppercase">FLOWSTATE</span>
             </div>
-            <div className="flex space-x-6">
-              <Link to="/privacy" className="text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400">
-                Privacy
-              </Link>
-              <Link to="/terms" className="text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400">
-                Terms
-              </Link>
-              <Link to="/support" className="text-slate-600 dark:text-slate-400 hover:text-primary-600 dark:hover:text-primary-400">
-                Support
-              </Link>
-            </div>
+            <p className="text-slate-500 dark:text-slate-400 font-bold max-w-lg leading-relaxed uppercase tracking-widest text-[10px]">
+              The Neural Dashboard for Next-Generation Engineers.<br />Built for the Elite Community.
+            </p>
           </div>
-          <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-700 text-center">
-            <p className="text-slate-500 dark:text-slate-400">
-              © 2024 FlowState. All rights reserved.
+
+          <div className="flex flex-wrap justify-center gap-12 text-xs font-black text-slate-400 dark:text-slate-600 tracking-[0.3em] uppercase">
+            <Link to="#" className="hover:text-indigo-600 transition-colors">Privacy</Link>
+            <Link to="#" className="hover:text-indigo-600 transition-colors">Terms</Link>
+            <Link to="#" className="hover:text-indigo-600 transition-colors">Discord</Link>
+            <Link to="#" className="hover:text-indigo-600 transition-colors">Security</Link>
+          </div>
+
+          <div className="pt-16 border-t border-slate-200 dark:border-white/5 flex flex-col items-center gap-6">
+            <div className="flex items-center gap-2 px-4 py-2 rounded bg-slate-200 dark:bg-white/5 text-[9px] font-black text-slate-500 uppercase tracking-widest">
+              <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+              System Status: NOMINAL_FLOW_ACTIVE
+            </div>
+            <p className="text-[10px] font-black text-slate-400 dark:text-slate-600 tracking-[0.5em] uppercase">
+              © 2026 NEURAL INTERACTIVE SYSTEMS. ALL RIGHTS RESERVED.
             </p>
           </div>
         </div>
       </footer>
+
+      {/* Global Aesthetics */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; }
+
+        @keyframes scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+
+        .animate-scroll {
+          animation: scroll 40s linear infinite;
+        }
+
+        .shadow-3xl {
+          box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.3);
+        }
+
+        .perspective-1000 { perspective: 1000px; }
+        .rotate-x-12 { transform: rotateX(8deg); }
+      `}</style>
     </div>
   );
 };

@@ -67,8 +67,17 @@ const LANG_MAP: Record<string, string> = {
 };
 
 export default function CodeEditorPageNew() {
-  const [files, setFiles] = useState<FileType[]>(initialFiles);
-  const [activeFileId, setActiveFileId] = useState('index.html');
+  const [files, setFiles] = useState<FileType[]>(() => {
+    try {
+      const saved = localStorage.getItem('flowstate-editor-files');
+      return saved ? JSON.parse(saved) : initialFiles;
+    } catch {
+      return initialFiles;
+    }
+  });
+  const [activeFileId, setActiveFileId] = useState(() => {
+    return localStorage.getItem('flowstate-active-file') || 'index.html';
+  });
   const [output, setOutput] = useState<string[]>(['# Terminal', '$ Ready to execute code...']);
   const [isRunning, setIsRunning] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
@@ -86,6 +95,54 @@ export default function CodeEditorPageNew() {
   // Editor Refs
   const editorRef = React.useRef<any>(null);
   const monacoRef = React.useRef<any>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleDownloadFile = useCallback(() => {
+    if (!activeFile) return;
+    const blob = new Blob([activeFile.content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = activeFile.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, [activeFile]);
+
+  const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      const fileName = file.name;
+      const ext = fileName.split('.').pop() || 'txt';
+      const language = LANG_MAP[ext] || 'plaintext';
+
+      const existingFile = files.find(f => f.name === fileName);
+      if (existingFile) {
+        if (window.confirm(`File ${fileName} already exists. Overwrite?`)) {
+          setFiles(prev => prev.map(f => f.id === existingFile.id ? { ...f, content } : f));
+          setActiveFileId(existingFile.id);
+        }
+      } else {
+        const newFile: FileType = {
+          id: fileName,
+          name: fileName,
+          language,
+          content,
+        };
+        setFiles(prev => [...prev, newFile]);
+        setActiveFileId(fileName);
+      }
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, [files]);
 
   // Reset code updated animation after 2 seconds
   useEffect(() => {
@@ -94,6 +151,15 @@ export default function CodeEditorPageNew() {
       return () => clearTimeout(timer);
     }
   }, [codeUpdated]);
+
+  // Persist files and active tab to LocalStorage automatically
+  useEffect(() => {
+    localStorage.setItem('flowstate-editor-files', JSON.stringify(files));
+  }, [files]);
+  
+  useEffect(() => {
+    localStorage.setItem('flowstate-active-file', activeFileId);
+  }, [activeFileId]);
 
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor;
@@ -354,9 +420,40 @@ export default function CodeEditorPageNew() {
 
       <div className="flex-1 flex min-h-0 relative">
         {/* Sidebar */}
-        <aside className="w-60 bg-[#252526] border-r border-[#3e3e42] overflow-auto">
-          <div className="p-2">
-            <div className="text-xs text-slate-400 uppercase mb-2 px-2">Files</div>
+        <aside className="w-60 bg-[#252526] border-r border-[#3e3e42] flex flex-col">
+          <div className="p-3 border-b border-[#3e3e42]">
+            <div className="text-xs text-slate-400 font-semibold uppercase mb-3 px-1">EXPLORER</div>
+            <div className="flex gap-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                className="hidden"
+                accept=".txt,.js,.py,.html,.css,.json,.java,.cpp,.c,.cs,.go,.rs,.php"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1 px-2 py-1.5 bg-[#37373d] hover:bg-[#505050] text-[#cccccc] rounded text-xs transition-colors flex items-center justify-center gap-1 shadow-sm"
+                title="Upload file from computer"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                Upload
+              </button>
+              <button
+                onClick={handleDownloadFile}
+                disabled={!activeFile}
+                className="flex-1 px-2 py-1.5 bg-[#37373d] hover:bg-[#505050] text-[#cccccc] rounded text-xs transition-colors disabled:opacity-50 flex items-center justify-center gap-1 shadow-sm"
+                title="Download current file"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                Download
+              </button>
+            </div>
+          </div>
+          <div className="p-2 flex-1 overflow-auto">
+            <div className="flex items-center justify-between px-2 mb-2">
+              <div className="text-xs text-slate-400 uppercase">Open Editors</div>
+            </div>
             {files.map(file => (
               <div
                 key={file.id}
@@ -391,8 +488,40 @@ export default function CodeEditorPageNew() {
         <div className="flex-1 flex min-w-0">
           {/* Main Editor Area */}
           <main className="flex-1 flex flex-col min-w-0 min-h-0 relative">
+            {/* Editor Tabs across top */}
+            <div className="flex bg-[#252526] border-b border-[#3e3e42] overflow-x-auto select-none custom-scrollbar">
+              {files.map(file => (
+                <div
+                  key={file.id}
+                  onClick={() => setActiveFileId(file.id)}
+                  className={`group flex items-center gap-2 px-4 py-2 text-sm border-r border-[#3e3e42] min-w-max cursor-pointer transition-colors ${
+                    activeFileId === file.id
+                      ? 'bg-[#1e1e1e] text-blue-400 border-t-2 border-t-blue-500'
+                      : 'bg-[#2d2d30] text-slate-400 hover:bg-[#2d2d30]/80'
+                  }`}
+                >
+                  <span className="text-[10px] font-mono font-bold bg-[#1e1e1e] px-1 py-0.5 rounded text-slate-500">
+                    {file.language === 'javascript' ? 'JS' : file.language === 'python' ? 'PY' : file.language.slice(0, 3).toUpperCase()}
+                  </span>
+                  {file.name}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.confirm(`Delete ${file.name}?`)) handleDeleteFile(file.id);
+                    }}
+                    title="Close"
+                    className={`ml-1 rounded-full w-5 h-5 flex items-center justify-center hover:bg-slate-600 hover:text-white transition-all ${
+                      activeFileId === file.id ? 'opacity-100 text-slate-400' : 'opacity-0 group-hover:opacity-100 text-slate-500'
+                    }`}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+            
             {/* Editor/Preview */}
-            <div className="flex-1 min-h-0 relative">
+            <div className="flex-1 min-h-0 relative bg-[#1e1e1e]">
               {showPreview && activeFile?.language === 'html' ? (
                 <iframe
                   srcDoc={activeFile.content}

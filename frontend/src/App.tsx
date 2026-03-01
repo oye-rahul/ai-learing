@@ -30,6 +30,10 @@ import SharePage from './pages/SharePage';
 import CodeEditorPage from './pages/CodeEditorPage';
 import TutorialsPage from './pages/TutorialsPage';
 import ExamsPage from './pages/ExamsPage';
+import CodeExplainerPage from './pages/CodeExplainerPage';
+import DebugHelperPage from './pages/DebugHelperPage';
+import PracticePage from './pages/PracticePage';
+import AILearningAssistantPage from './pages/AILearningAssistantPage';
 
 // Components
 import LoadingSpinner from './components/shared/LoadingSpinner';
@@ -207,6 +211,47 @@ function App() {
             <ProtectedRoute>
               <AppLayout>
                 <ExamsPage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/code-explainer"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <CodeExplainerPage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/debug-helper"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <DebugHelperPage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/practice"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <PracticePage />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/ai-assistant"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <AILearningAssistantPage />
               </AppLayout>
             </ProtectedRoute>
           }

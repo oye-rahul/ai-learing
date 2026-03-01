@@ -33,8 +33,13 @@ const LANGUAGE_MAP = {
   haskell: { language: 'haskell', version: '9.0.1' }
 };
 
+const fs = require('fs').promises;
+const path = require('path');
+const { exec } = require('child_process');
+const crypto = require('crypto');
+
 /**
- * Execute code using Piston API
+ * Execute code using local child_process (Fallback because Piston public API is whitelist-only)
  * @param {string} code - Source code to execute
  * @param {string} language - Programming language
  * @param {string} input - Standard input for the program
@@ -49,88 +54,102 @@ async function executeCode(code, language, input = '') {
     }
 
     const startTime = Date.now();
+    
+    // Create temp directory if not exists
+    const tempDir = path.join(__dirname, '../temp');
+    try {
+      await fs.mkdir(tempDir, { recursive: true });
+    } catch(err) {}
 
-    // Prepare request for Piston API
-    const requestData = {
-      language: langConfig.language,
-      version: langConfig.version,
-      files: [
-        {
-          name: getFileName(language),
-          content: code
-        }
-      ],
-      stdin: input || '',
-      args: [],
-      compile_timeout: 10000,
-      run_timeout: 3000,
-      compile_memory_limit: -1,
-      run_memory_limit: -1
+    const fileId = crypto.randomBytes(8).toString('hex');
+    const langLower = language.toLowerCase();
+    const isJava = langLower === 'java';
+    
+    // Map language to correct file extension
+    const extMap = {
+      python: 'py', javascript: 'js', java: 'java',
+      cpp: 'cpp', c: 'c', go: 'go', rust: 'rs',
+      php: 'php', typescript: 'ts', ruby: 'rb',
     };
+    const ext = extMap[langLower] || 'txt';
 
-    // Execute code via Piston API
-    const response = await axios.post(`${PISTON_API}/execute`, requestData, {
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      timeout: 15000
+    let fileName;
+    
+    if (isJava) {
+      // Find class name from code if it's java, else use Main
+      const classNameMatch = code.match(/public\s+class\s+([a-zA-Z0-9_]+)/);
+      const className = classNameMatch ? classNameMatch[1] : 'Main';
+      fileName = `${className}.java`;
+    } else {
+      fileName = `script_${fileId}.${ext}`;
+    }
+    
+    const filePath = path.join(tempDir, fileName);
+    await fs.writeFile(filePath, code);
+
+    // Write input to a temp file
+    const inputPath = path.join(tempDir, `input_${fileId}.txt`);
+    await fs.writeFile(inputPath, input || '');
+
+    return new Promise((resolve) => {
+      let command = '';
+      if (langLower === 'python') {
+        command = `python "${filePath}" < "${inputPath}"`;
+      } else if (langLower === 'javascript') {
+        command = `node "${filePath}" < "${inputPath}"`;
+      } else if (langLower === 'java') {
+        command = `cd "${tempDir}" && javac "${fileName}" && java "${fileName.replace('.java', '')}" < "${inputPath}"`;
+      } else {
+        resolve({
+          success: false,
+          output: '',
+          error: `Local execution for '${language}' is not yet supported. Try Python, JavaScript, or Java.`,
+          exitCode: -1,
+          executionTime: '0ms',
+          language: language,
+          online: false
+        });
+        return;
+      }
+
+      exec(command, { timeout: 10000 }, async (error, stdout, stderr) => {
+        const executionTime = Date.now() - startTime;
+        
+        // Cleanup temp files (best effort)
+        try {
+          await fs.unlink(filePath).catch(()=>null);
+          await fs.unlink(inputPath).catch(()=>null);
+          if (isJava) {
+            await fs.unlink(filePath.replace('.java', '.class')).catch(()=>null);
+          }
+        } catch (e) {}
+
+        if (error) {
+          resolve({
+            success: false,
+            output: stdout || '',
+            error: stderr || error.message,
+            exitCode: error.code || -1,
+            executionTime: `${executionTime}ms`,
+            language: language,
+            online: false
+          });
+        } else {
+          resolve({
+            success: true,
+            output: stdout || '',
+            error: stderr || '',
+            exitCode: 0,
+            executionTime: `${executionTime}ms`,
+            language: language,
+            online: false
+          });
+        }
+      });
     });
 
-    const executionTime = Date.now() - startTime;
-    const result = response.data;
-
-    // Check if compilation failed
-    if (result.compile && result.compile.code !== 0) {
-      return {
-        success: false,
-        output: result.compile.stdout || '',
-        error: result.compile.stderr || 'Compilation failed',
-        exitCode: result.compile.code,
-        executionTime: `${executionTime}ms`,
-        language: language,
-        online: true
-      };
-    }
-
-    // Check if execution failed
-    if (result.run && result.run.code !== 0) {
-      return {
-        success: false,
-        output: result.run.stdout || '',
-        error: result.run.stderr || 'Runtime error',
-        exitCode: result.run.code,
-        executionTime: `${executionTime}ms`,
-        language: language,
-        online: true
-      };
-    }
-
-    // Success
-    return {
-      success: true,
-      output: result.run.stdout || '',
-      error: result.run.stderr || '',
-      exitCode: result.run.code || 0,
-      executionTime: `${executionTime}ms`,
-      language: language,
-      online: true
-    };
-
   } catch (error) {
-    console.error('Online compiler error:', error.message);
-    
-    if (error.response) {
-      return {
-        success: false,
-        output: '',
-        error: `API Error: ${error.response.data?.message || error.message}`,
-        exitCode: -1,
-        executionTime: '0ms',
-        language: language,
-        online: true
-      };
-    }
-
+    console.error('Local compiler error:', error.message);
     return {
       success: false,
       output: '',
@@ -138,7 +157,7 @@ async function executeCode(code, language, input = '') {
       exitCode: -1,
       executionTime: '0ms',
       language: language,
-      online: true
+      online: false
     };
   }
 }

@@ -73,7 +73,10 @@ const Header: React.FC = () => {
               {quickSearchOptions.map((option, index) => (
                 <button
                   key={index}
-                  onClick={() => {
+                  type="button"
+                  onMouseDown={(e) => {
+                    // Use onMouseDown instead of onClick to fire before the input's onBlur hides the dropdown
+                    e.preventDefault();
                     option.action();
                     setSearchQuery('');
                     setShowSearchResults(false);

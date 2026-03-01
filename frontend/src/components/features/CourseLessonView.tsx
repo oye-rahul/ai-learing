@@ -272,7 +272,13 @@ const CourseLessonView: React.FC<CourseLessonViewProps> = ({
             <div className="aspect-video bg-slate-900 rounded-lg overflow-hidden relative shadow-2xl group">
               {currentLesson?.videoUrl ? (
                 <iframe
-                  src={currentLesson.videoUrl.replace('youtu.be/', 'youtube.com/embed/')}
+                  src={(() => {
+                    const url = currentLesson.videoUrl;
+                    if (url.includes('youtube.com/embed/')) return url;
+                    if (url.includes('youtu.be/')) return url.replace('youtu.be/', 'youtube.com/embed/');
+                    if (url.includes('watch?v=')) return url.replace('watch?v=', 'embed/');
+                    return url;
+                  })()}
                   className="w-full h-full"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
@@ -553,14 +559,14 @@ const CourseLessonView: React.FC<CourseLessonViewProps> = ({
                               key={oIndex}
                               onClick={() => handleAnswerSelect(qIndex, oIndex)}
                               className={`w-full text-left p-4 rounded-lg transition-all border ${userAnswers[qIndex] === oIndex
-                                  ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-500 ring-1 ring-indigo-500'
-                                  : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-indigo-300'
+                                ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-500 ring-1 ring-indigo-500'
+                                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-indigo-300'
                                 }`}
                             >
                               <div className="flex items-center">
                                 <div className={`w-5 h-5 rounded-full border flex items-center justify-center mr-3 ${userAnswers[qIndex] === oIndex
-                                    ? 'border-indigo-600 bg-indigo-600 text-white'
-                                    : 'border-slate-400'
+                                  ? 'border-indigo-600 bg-indigo-600 text-white'
+                                  : 'border-slate-400'
                                   }`}>
                                   {userAnswers[qIndex] === oIndex && (
                                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -607,8 +613,8 @@ const CourseLessonView: React.FC<CourseLessonViewProps> = ({
                   <div className="text-left max-w-2xl mx-auto space-y-4 mb-8">
                     {quizQuestions.map((q, index) => (
                       <div key={index} className={`p-4 rounded-lg border ${userAnswers[index] === q.correctIndex
-                          ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800'
-                          : 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800'
+                        ? 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800'
+                        : 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800'
                         }`}>
                         <p className="font-medium mb-2">{q.question}</p>
                         <p className="text-sm">
