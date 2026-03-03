@@ -7,9 +7,9 @@
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cd backend && npm run dev",
     "client": "cd frontend && npm start",
-    "build": "cd frontend && npm install && CI=false GENERATE_SOURCEMAP=false npm run build",
-    "vercel-build": "cd frontend && npm install && CI=false GENERATE_SOURCEMAP=false npm run build",
-    "postinstall": "cd backend && npm install && cd ../frontend && npm install",
+    "build": "cd frontend && npm install --legacy-peer-deps && CI=false npm run build",
+    "vercel-build": "cd frontend && npm install --legacy-peer-deps && CI=false npm run build",
+    "postinstall": "echo 'Skipping postinstall for Vercel'",
     "install-all": "npm install && cd frontend && npm install && cd ../backend && npm install"
   },
   "keywords": [
