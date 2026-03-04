@@ -172,28 +172,116 @@ const HomePage: React.FC = () => {
               </div>
             </div>
 
-            <div className="aspect-[21/10] flex items-center justify-center relative bg-slate-50 dark:bg-[#01040f]">
-              {/* Visual Grid Mockup */}
-              <div className="absolute inset-0 grid grid-cols-6 grid-rows-4 gap-6 p-8 opacity-20 dark:opacity-40">
-                <div className="col-span-2 row-span-2 bg-slate-300 dark:bg-white/5 rounded-3xl backdrop-blur-sm"></div>
-                <div className="col-span-4 row-span-1 bg-slate-300 dark:bg-white/5 rounded-3xl backdrop-blur-sm"></div>
-                <div className="col-span-1 row-span-3 bg-slate-300 dark:bg-white/5 rounded-3xl backdrop-blur-sm"></div>
-                <div className="col-span-3 row-span-3 bg-slate-300 dark:bg-white/5 rounded-3xl backdrop-blur-sm"></div>
-              </div>
+            <div className="aspect-[21/10] flex items-center justify-center relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 overflow-hidden">
+              {/* Background Pattern */}
+              <div className="absolute inset-0 opacity-10" style={{
+                backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)',
+                backgroundSize: '32px 32px'
+              }}></div>
 
-              {/* Authentication Lockout Interface */}
-              <div className="relative z-20 flex flex-col items-center justify-center p-12 glass-premium rounded-[3.5rem] shadow-[0_0_80px_rgba(79,70,229,0.3)]">
-                <div className="w-24 h-24 rounded-[2rem] bg-slate-900 dark:bg-white flex items-center justify-center mb-8 shadow-2xl animate-float">
-                  <Lock className="w-10 h-10 text-white dark:text-indigo-600" />
+              {/* Animated Dashboard Preview */}
+              <div className="absolute inset-0 grid grid-cols-6 grid-rows-4 gap-6 p-8">
+                {/* Dashboard Cards Animation */}
+                <div className="col-span-2 row-span-2 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-3xl backdrop-blur-sm border border-white/10 p-6 flex flex-col justify-between animate-fade-in hover:scale-105 transition-transform duration-500 cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                      <Code2 className="w-5 h-5 text-indigo-400" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Projects</p>
+                      <p className="text-2xl font-black text-white">12</p>
+                    </div>
+                  </div>
+                  <div className="h-16 flex items-end gap-1">
+                    {[40, 65, 45, 80, 55, 90, 70].map((height, i) => (
+                      <div key={i} className="flex-1 bg-indigo-500/40 rounded-t hover:bg-indigo-500/60 transition-colors" style={{ height: `${height}%` }}></div>
+                    ))}
+                  </div>
                 </div>
-                <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-4 tracking-tighter uppercase italic">Protected Workspace</h3>
-                <p className="text-slate-600 dark:text-slate-400 font-bold tracking-[0.2em] uppercase text-xs mb-10 text-center max-w-sm">
-                  Enter your credentials to initialize neural handshake and unlock the full learning suite.
-                </p>
 
-                <div className="flex flex-col sm:flex-row gap-4 w-full">
-                  <button onClick={() => navigate('/auth/login')} className="flex-1 bg-indigo-600 text-white font-black py-4 rounded-2xl hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-600/20 px-8">LOGIN NOW</button>
-                  <button onClick={() => navigate('/auth/signup')} className="flex-1 bg-white/10 dark:bg-white/5 border border-white/20 dark:border-white/10 text-slate-900 dark:text-white font-black py-4 rounded-2xl hover:bg-white/20 transition-all px-8">REGISTER</button>
+                <div className="col-span-4 row-span-1 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-3xl backdrop-blur-sm border border-white/10 p-6 flex items-center justify-between animate-fade-in hover:scale-105 transition-transform duration-500 cursor-pointer" style={{ animationDelay: '0.1s' }}>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                      <Sparkles className="w-6 h-6 text-purple-400" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Learning Streak</p>
+                      <p className="text-2xl font-black text-white">24 Days 🔥</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    {[1, 1, 1, 1, 0.5, 0.5, 0.3].map((opacity, i) => (
+                      <div key={i} className="w-8 h-8 rounded-lg bg-purple-500 hover:scale-110 transition-transform" style={{ opacity }}></div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="col-span-1 row-span-3 bg-gradient-to-b from-cyan-500/20 to-blue-500/20 rounded-3xl backdrop-blur-sm border border-white/10 p-6 flex flex-col gap-4 animate-fade-in hover:scale-105 transition-transform duration-500 cursor-pointer" style={{ animationDelay: '0.2s' }}>
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center">
+                    <LineChart className="w-5 h-5 text-cyan-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Skills</p>
+                    {['React', 'Python', 'Node.js'].map((skill, i) => (
+                      <div key={i} className="mb-3">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-white font-semibold">{skill}</span>
+                          <span className="text-slate-400">{90 - i * 10}%</span>
+                        </div>
+                        <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                          <div className="h-full bg-cyan-400 rounded-full transition-all duration-1000" style={{ width: `${90 - i * 10}%` }}></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="col-span-3 row-span-3 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-3xl backdrop-blur-sm border border-white/10 p-6 flex flex-col animate-fade-in hover:scale-105 transition-transform duration-500 cursor-pointer" style={{ animationDelay: '0.3s' }}>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                        <Terminal className="w-5 h-5 text-emerald-400" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Code Editor</p>
+                        <p className="text-sm font-black text-white">Live Preview</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                      <div className="w-2 h-2 rounded-full bg-emerald-500/50"></div>
+                      <div className="w-2 h-2 rounded-full bg-emerald-500/30"></div>
+                    </div>
+                  </div>
+                  <div className="flex-1 bg-slate-900/50 rounded-2xl p-4 font-mono text-xs overflow-hidden">
+                    <div className="text-purple-400">const <span className="text-cyan-400">greeting</span> = <span className="text-emerald-400">"Hello FlowState!"</span>;</div>
+                    <div className="text-purple-400 mt-1">console.<span className="text-yellow-400">log</span>(<span className="text-cyan-400">greeting</span>);</div>
+                    <div className="text-slate-500 mt-2">// Output: Hello FlowState!</div>
+                    <div className="text-purple-400 mt-3">function <span className="text-yellow-400">learn</span>() {'{'}</div>
+                    <div className="text-purple-400 ml-4">return <span className="text-emerald-400">"Keep coding!"</span>;</div>
+                    <div className="text-purple-400">{'}'}</div>
+                  </div>
+                </div>
+
+                {/* Additional Stats Cards in Bottom Row */}
+                <div className="col-span-2 row-span-1 bg-gradient-to-r from-orange-500/20 to-red-500/20 rounded-3xl backdrop-blur-sm border border-white/10 p-4 flex items-center gap-4 animate-fade-in hover:scale-105 transition-transform duration-500 cursor-pointer" style={{ animationDelay: '0.4s' }}>
+                  <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                    <Cpu className="w-5 h-5 text-orange-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Challenges</p>
+                    <p className="text-xl font-black text-white">48 Solved</p>
+                  </div>
+                </div>
+
+                <div className="col-span-2 row-span-1 bg-gradient-to-r from-rose-500/20 to-pink-500/20 rounded-3xl backdrop-blur-sm border border-white/10 p-4 flex items-center gap-4 animate-fade-in hover:scale-105 transition-transform duration-500 cursor-pointer" style={{ animationDelay: '0.5s' }}>
+                  <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center">
+                    <ShieldCheck className="w-5 h-5 text-rose-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Certificates</p>
+                    <p className="text-xl font-black text-white">5 Earned</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -202,7 +290,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Global Impact Section */}
-      <section className="relative py-40 px-6 border-y border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#030712] overflow-hidden">
+      <section className="relative py-40 px-6 border-y border-slate-200 dark:border-white/5 bg-white dark:bg-[#020617] overflow-hidden">
         {/* Section Local Background Blobs */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-4xl opacity-20 dark:opacity-40 pointer-events-none">
           <div className="absolute top-0 left-0 w-96 h-96 bg-indigo-600 rounded-full blur-[120px] animate-blob"></div>
@@ -210,7 +298,7 @@ const HomePage: React.FC = () => {
         </div>
 
         {/* Subtle Grid for this section */}
-        <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.07] pointer-events-none" style={{
+        <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.05] pointer-events-none" style={{
           backgroundImage: 'linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)',
           backgroundSize: '40px 40px'
         }}></div>
@@ -511,6 +599,15 @@ const HomePage: React.FC = () => {
         @keyframes scroll {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
+        }
+
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+
+        .animate-bounce-slow {
+          animation: bounce-slow 3s ease-in-out infinite;
         }
 
         .animate-scroll {

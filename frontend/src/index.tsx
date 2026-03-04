@@ -10,18 +10,47 @@ import { store } from './store/store';
 
 // Suppress harmless ResizeObserver errors from Monaco Editor
 window.addEventListener('error', (e) => {
-  if (e.message.includes('ResizeObserver')) {
+  if (e.message.includes('ResizeObserver') || e.message.includes('Canceled')) {
     e.stopImmediatePropagation();
     e.preventDefault();
   }
 });
 
-// Also suppress unhandled promise rejections related to ResizeObserver
+// Also suppress unhandled promise rejections related to ResizeObserver and Monaco
 window.addEventListener('unhandledrejection', (e) => {
-  if (e.reason?.message?.includes('ResizeObserver')) {
+  if (
+    e.reason?.message?.includes('ResizeObserver') ||
+    e.reason?.message?.includes('Canceled') ||
+    e.reason?.name === 'Canceled' ||
+    e.reason === 'Canceled'
+  ) {
     e.preventDefault();
   }
 });
+
+// Suppress specific harmless console logs
+const originalConsoleError = console.error;
+console.error = (...args) => {
+  if (
+    typeof args[0] === 'string' &&
+    (args[0].includes('move of an UNKNOWN touch') ||
+      args[0].includes('Canceled'))
+  ) {
+    return;
+  }
+  originalConsoleError(...args);
+};
+
+const originalConsoleWarn = console.warn;
+console.warn = (...args) => {
+  if (
+    typeof args[0] === 'string' &&
+    args[0].includes('move of an UNKNOWN touch')
+  ) {
+    return;
+  }
+  originalConsoleWarn(...args);
+};
 
 const theme = localStorage.getItem('theme') as 'light' | 'dark' | null;
 if (theme === 'dark') {

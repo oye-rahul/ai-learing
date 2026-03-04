@@ -51,21 +51,26 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 function App() {
   const dispatch = useDispatch<AppDispatch>();
-  const { loading, token } = useSelector((state: RootState) => state.auth);
+  const { loading, token, isAuthenticated } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
-    // Only check auth if we have a token
+    // Check auth on app load if token exists
     const storedToken = localStorage.getItem('token');
-    if (storedToken) {
+    const storedUser = localStorage.getItem('user');
+    
+    if (storedToken && storedUser) {
       dispatch(checkAuth());
     }
   }, [dispatch]);
 
   // Show loading only on initial auth check
-  if (loading && !token) {
+  if (loading && token === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" />
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+        <div className="text-center">
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-slate-600 dark:text-slate-400 font-semibold">Checking authentication...</p>
+        </div>
       </div>
     );
   }
@@ -73,17 +78,16 @@ function App() {
   return (
     <div className="App">
       <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<HomePage />} />
+        {/* Public Routes - Redirect to dashboard if authenticated */}
+        <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <HomePage />} />
         <Route path="/share/:slug" element={<SharePage />} />
 
-        {/* Auth Routes */}
+        {/* Auth Routes - Redirect to dashboard if already authenticated */}
         <Route path="/auth" element={<AuthLayout />}>
-          <Route path="login" element={<LoginPage />} />
-          <Route path="signup" element={<SignupPage />} />
+          <Route path="login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
+          <Route path="signup" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <SignupPage />} />
           <Route path="forgot-password" element={<ForgotPasswordPage />} />
           <Route path="reset-password" element={<ResetPasswordPage />} />
-
         </Route>
 
         {/* Protected Routes */}
@@ -257,8 +261,8 @@ function App() {
           }
         />
 
-        {/* Catch all route */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Catch all route - redirect based on auth status */}
+        <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/"} replace />} />
       </Routes>
     </div>
   );

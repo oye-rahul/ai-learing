@@ -29,11 +29,9 @@ api.interceptors.request.use(
       const geminiKey = localStorage.getItem('gemini_api_key');
       if (geminiKey) {
         config.headers['X-Gemini-Key'] = geminiKey;
-        console.log('✅ Added Gemini API key to request');
       }
     } catch (error) {
-      console.error('❌ Error accessing localStorage (tracking prevention?):', error);
-      console.warn('⚠️ Using backend default API key instead');
+      // Ignore error as we will just fall back to backend's default API key
     }
 
     return config;

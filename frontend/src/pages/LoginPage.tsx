@@ -24,6 +24,16 @@ const LoginPage: React.FC = () => {
     password: '',
   });
 
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('rememberUserEmail');
+    if (savedEmail) {
+      setFormData(prev => ({ ...prev, email: savedEmail }));
+      setRememberMe(true);
+    }
+  }, []);
+
   useEffect(() => {
     if (error) {
       toast.error(error);
@@ -60,6 +70,13 @@ const LoginPage: React.FC = () => {
 
     try {
       await dispatch(login(formData)).unwrap();
+
+      if (rememberMe) {
+        localStorage.setItem('rememberUserEmail', formData.email);
+      } else {
+        localStorage.removeItem('rememberUserEmail');
+      }
+
       toast.success('Login successful');
       navigate('/dashboard', { replace: true });
     } catch (error) {
@@ -84,7 +101,10 @@ const LoginPage: React.FC = () => {
   return (
     <div className="w-full">
       {/* Enhanced Glass Card */}
-      <div className="relative p-10 rounded-[2.5rem] glass-premium animate-fade-in overflow-hidden">
+      <div className="relative p-10 rounded-[2.5rem] glass-liquid animate-fade-in group/card">
+        {/* Moving Sheen */}
+        <div className="glass-liquid-sheen"></div>
+
         {/* Subtle Inner Glow */}
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
 
@@ -107,7 +127,7 @@ const LoginPage: React.FC = () => {
               onChange={handleChange}
               error={formErrors.email}
               placeholder="Enter your email"
-              className="bg-white dark:bg-slate-900/60 border-slate-200 dark:border-white/10 rounded-2xl p-4 focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+              className="bg-white/5 dark:bg-slate-900/40 border-slate-200/20 dark:border-white/5 rounded-2xl p-4 focus:ring-2 focus:ring-indigo-500 transition-all outline-none backdrop-blur-sm"
               leftIcon={<Mail className="w-5 h-5 text-slate-400" />}
             />
           </div>
@@ -136,6 +156,8 @@ const LoginPage: React.FC = () => {
               id="remember-me"
               name="remember-me"
               type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
               className="h-4 w-4 rounded border-slate-300 dark:border-white/10 text-indigo-600 focus:ring-indigo-500 cursor-pointer transition-all"
             />
             <label htmlFor="remember-me" className="ml-3 block text-sm font-medium text-slate-600 dark:text-slate-400 cursor-pointer">

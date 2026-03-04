@@ -72,6 +72,10 @@ const SignupPage: React.FC = () => {
         password: formData.password,
         role: formData.role,
       })).unwrap();
+
+      // Auto-remember email for their next login session
+      localStorage.setItem('rememberUserEmail', formData.email);
+
       toast.success('Account created successfully');
       navigate('/dashboard', { replace: true });
     } catch (error) {
@@ -90,7 +94,10 @@ const SignupPage: React.FC = () => {
   return (
     <div className="w-full">
       {/* Enhanced Glass Card */}
-      <div className="relative p-10 rounded-[3rem] glass-premium animate-fade-in overflow-hidden">
+      <div className="relative p-10 rounded-[3rem] glass-liquid animate-fade-in group/card">
+        {/* Moving Sheen */}
+        <div className="glass-liquid-sheen"></div>
+
         {/* Subtle Inner Glow */}
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
 
@@ -114,7 +121,7 @@ const SignupPage: React.FC = () => {
                 onChange={handleChange}
                 error={formErrors.username}
                 placeholder="Enter username"
-                className="bg-white dark:bg-slate-900/60 border-slate-200 dark:border-white/10 rounded-2xl p-4 focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                className="bg-white/5 dark:bg-slate-900/40 border-slate-200/20 dark:border-white/5 rounded-2xl p-4 focus:ring-2 focus:ring-indigo-500 transition-all outline-none backdrop-blur-sm"
                 leftIcon={<User className="w-5 h-5 text-slate-400" />}
               />
             </div>
@@ -127,7 +134,7 @@ const SignupPage: React.FC = () => {
                 onChange={handleChange}
                 error={formErrors.email}
                 placeholder="Enter email"
-                className="bg-white dark:bg-slate-900/60 border-slate-200 dark:border-white/10 rounded-2xl p-4 focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                className="bg-white/5 dark:bg-slate-900/40 border-slate-200/20 dark:border-white/5 rounded-2xl p-4 focus:ring-2 focus:ring-indigo-500 transition-all outline-none backdrop-blur-sm"
                 leftIcon={<Mail className="w-5 h-5 text-slate-400" />}
               />
             </div>
@@ -143,7 +150,7 @@ const SignupPage: React.FC = () => {
                 onChange={handleChange}
                 error={formErrors.password}
                 placeholder="••••••••"
-                className="bg-white dark:bg-slate-900/60 border-slate-200 dark:border-white/10 rounded-2xl p-4 focus:ring-2 focus:ring-indigo-500 transition-all outline-none"
+                className="bg-white/5 dark:bg-slate-900/40 border-slate-200/20 dark:border-white/5 rounded-2xl p-4 focus:ring-2 focus:ring-indigo-500 transition-all outline-none backdrop-blur-sm"
                 leftIcon={<Lock className="w-5 h-5 text-slate-400" />}
               />
             </div>
