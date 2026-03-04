@@ -53,6 +53,8 @@ app.use(cors({
 
     const isAllowed = allowedOrigins.some(ao => origin.startsWith(ao)) ||
       origin.endsWith('.vercel.app') ||
+      origin.endsWith('.amplifyapp.com') ||
+      origin.endsWith('.elasticbeanstalk.com') ||
       origin.includes('localhost:');
 
     if (isAllowed) {
