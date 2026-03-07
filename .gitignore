@@ -53,3 +53,8 @@ coverage/
 .cache/
 .temp/
 tmp/
+
+# amplify
+.amplify
+amplify_outputs*
+amplifyconfiguration*

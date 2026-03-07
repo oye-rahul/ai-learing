@@ -21,11 +21,19 @@
   "author": "FlowState Team",
   "license": "MIT",
   "devDependencies": {
-    "concurrently": "^7.6.0"
+    "@aws-amplify/backend": "^1.21.0",
+    "@aws-amplify/backend-cli": "^1.8.2",
+    "aws-cdk-lib": "^2.234.1",
+    "concurrently": "^7.6.0",
+    "constructs": "^10.5.1",
+    "esbuild": "^0.27.3",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.95.3",
+    "aws-amplify": "^6.16.2",
     "axios": "^1.13.4",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
