@@ -26,11 +26,14 @@
 
 ---
 
-## ✨ Key Features
+## ✨ Key 
+<img width="1902" height="969" alt="Screenshot 2026-03-08 174355" src="https://github.com/user-attachments/assets/5d55350e-6aef-4ef0-b72d-7afdd875102b" />
+.
+<img width="1899" height="969" alt="Screenshot 2026-03-08 174438" src="https://github.com/user-attachments/assets/9f835d55-f419-4d41-9eb0-ab9055d37104" />
+.
+<img width="1908" height="971" alt="Screenshot 2026-03-08 182200" src="https://github.com/user-attachments/assets/649d85c0-a2de-4d81-996f-8dc4fbbe8b27" />
 
-<img width="1919" height="1079" alt="FlowState Dashboard" src="https://github.com/user-attachments/assets/41dae2e6-21ee-43e8-8cf3-ed6949d773f1" />
-<br/>
-<img width="1913" height="976" alt="Interactive Playground" src="https://github.com/user-attachments/assets/84b7adb4-263a-4d21-9b0b-035009275a63" />
+Features
 
 ### 🤖 Agentic AI Integrations
 - **1-Click Auto Fixing:** The AI doesn't just suggest; it automatically analyzes, patches, and applies code fixes directly into the editor with smooth highlight animations.
