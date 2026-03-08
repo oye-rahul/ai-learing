@@ -7,8 +7,8 @@
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cd backend && npm run dev",
     "client": "cd frontend && npm start",
-    "build": "cd frontend && npm install --legacy-peer-deps && CI=false npm run build",
-    "vercel-build": "cd frontend && npm install --legacy-peer-deps && CI=false npm run build",
+    "build": "cd frontend && npm install --legacy-peer-deps && npm run build",
+    "vercel-build": "cd frontend && npm install --legacy-peer-deps && npm run build",
     "postinstall": "echo 'Skipping postinstall for Vercel'",
     "install-all": "npm install && cd frontend && npm install && cd ../backend && npm install"
   },
